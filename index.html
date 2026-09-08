@@ -9,13 +9,18 @@
         body {
             font-family: 'Aptos Serif', 'Segoe UI', serif;
             font-weight: 600;
-            font-size: 22px;
+            font-size: clamp(14px, 4vw, 22px);
         }
         input, textarea, button, table {
             font-weight: 400;
+            font-size: clamp(13px, 3.5vw, 18px);
         }
         label, h1, h2, th {
             font-weight: 600;
+            font-size: clamp(14px, 4vw, 20px);
+        }
+        h1 {
+            font-size: clamp(18px, 5vw, 30px);
         }
         #toastContainer {
             transition: all 0.3s ease-in-out;
@@ -52,11 +57,11 @@
     <!-- Custom Web App Confirmation Modal -->
     <div id="confirmModal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-xl shadow-xl max-w-md w-full p-6 space-y-4">
-            <h3 class="text-xl font-bold text-slate-800" id="modalTitle">Confirm Action</h3>
-            <p class="text-base text-slate-600" id="modalMessage">Are you sure you want to proceed?</p>
+            <h3 class="font-bold text-slate-800" id="modalTitle">Confirm Action</h3>
+            <p class="text-slate-600" id="modalMessage">Are you sure you want to proceed?</p>
             <div class="flex justify-end gap-3 pt-2">
-                <button id="modalCancelBtn" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-base font-semibold transition">Cancel</button>
-                <button id="modalConfirmBtn" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-base font-semibold transition">Confirm</button>
+                <button id="modalCancelBtn" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-semibold transition">Cancel</button>
+                <button id="modalConfirmBtn" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition">Confirm</button>
             </div>
         </div>
     </div>
@@ -64,54 +69,54 @@
     <!-- Custom Input Prompt Modal for Renaming -->
     <div id="promptModal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-xl shadow-xl max-w-md w-full p-6 space-y-4">
-            <h3 class="text-xl font-bold text-slate-800" id="promptTitle">Edit Folder Name</h3>
-            <input type="text" id="promptInput" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg">
+            <h3 class="font-bold text-slate-800" id="promptTitle">Edit Folder Name</h3>
+            <input type="text" id="promptInput" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
             <div class="flex justify-end gap-3 pt-2">
-                <button id="promptCancelBtn" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-base font-semibold transition">Cancel</button>
-                <button id="promptConfirmBtn" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-base font-semibold transition">Save</button>
+                <button id="promptCancelBtn" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-semibold transition">Cancel</button>
+                <button id="promptConfirmBtn" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition">Save</button>
             </div>
         </div>
     </div>
 
     <!-- Header -->
     <header class="bg-blue-600 text-white shadow-md">
-        <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-            <h1 class="text-2xl sm:text-3xl tracking-wide">Work Folder Management System</h1>
+        <div class="max-w-7xl mx-auto px-4 py-3 sm:py-4 flex justify-between items-center">
+            <h1 class="tracking-wide">Work Folder Management System</h1>
         </div>
     </header>
 
     <!-- Main Container -->
-    <main class="max-w-7xl mx-auto px-3 sm:px-4 py-6 flex-grow grid grid-cols-1 lg:grid-cols-3 gap-6 w-full">
+    <main class="max-w-7xl mx-auto px-2 sm:px-4 py-4 sm:py-6 flex-grow grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 w-full">
         
         <!-- Left Column: Create Work Form Only -->
-        <div class="lg:col-span-1 flex flex-col gap-6">
+        <div class="lg:col-span-1 flex flex-col gap-4 sm:gap-6">
             
             <!-- Create Work Card -->
             <div class="bg-white p-4 sm:p-6 rounded-xl shadow-sm border border-slate-200">
-                <h2 class="text-xl text-slate-700 border-b pb-3 mb-4 flex items-center gap-2">
-                    <svg class="w-6 h-6 text-blue-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <h2 class="text-slate-700 border-b pb-2 sm:pb-3 mb-3 sm:mb-4 flex items-center gap-2">
+                    <svg class="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                     </svg>
                     Create Work Entry
                 </h2>
-                <form id="workForm" class="space-y-4">
+                <form id="workForm" class="space-y-3 sm:space-y-4">
                     <div>
-                        <label class="block text-base uppercase text-slate-500 mb-1">Date of Entry</label>
+                        <label class="block uppercase text-slate-500 mb-1">Date of Entry</label>
                         <input type="date" id="entryDate" required 
-                            class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg">
+                            class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                     </div>
                     <div>
-                        <label class="block text-base uppercase text-slate-500 mb-1">Name of the Folder / Work</label>
+                        <label class="block uppercase text-slate-500 mb-1">Name of the Folder / Work</label>
                         <input type="text" id="workName" placeholder="e.g., SUC Assessment - Bharti Airtel" required 
-                            class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg">
+                            class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                     </div>
                     <div>
-                        <label class="block text-base uppercase text-slate-500 mb-1">Remarks</label>
+                        <label class="block uppercase text-slate-500 mb-1">Remarks</label>
                         <textarea id="workRemarks" rows="3" placeholder="Enter remarks details..." 
-                            class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg resize-none"></textarea>
+                            class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"></textarea>
                     </div>
                     <button type="submit" id="submitBtn"
-                        class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-lg transition text-lg shadow-sm font-semibold">
+                        class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-lg transition shadow-sm font-semibold">
                         Create New Entry
                     </button>
                 </form>
@@ -123,23 +128,23 @@
         <div class="lg:col-span-2 flex flex-col gap-4 min-w-0">
             <div class="bg-white p-4 sm:p-6 rounded-xl shadow-sm border border-slate-200 flex-grow flex flex-col min-w-0">
                 
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center pb-4 border-b gap-4">
-                    <h2 class="text-xl text-slate-700">Details of Works</h2>
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center pb-3 sm:pb-4 border-b gap-3 sm:gap-4">
+                    <h2 class="text-slate-700">Details of Works</h2>
                     
                     <!-- Action Bar with Table Search Box -->
                     <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-start sm:justify-end">
                         <div class="relative w-full sm:w-auto">
                             <input type="text" id="tableSearchInput" placeholder="Filter table results..." 
-                                class="pl-8 pr-3 py-1.5 border border-slate-300 rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-64">
-                            <svg class="w-5 h-5 text-slate-400 absolute left-2.5 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                class="pl-8 pr-3 py-1.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-64">
+                            <svg class="w-4 h-4 sm:w-5 sm:h-5 text-slate-400 absolute left-2.5 top-2.5 sm:top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                             </svg>
                         </div>
                         <div class="flex gap-2 w-full sm:w-auto justify-end">
-                            <button id="refreshBtn" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-base font-semibold transition shrink-0">
+                            <button id="refreshBtn" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-semibold transition shrink-0">
                                 Refresh
                             </button>
-                            <button id="deleteBtn" class="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg text-base font-semibold transition shrink-0">
+                            <button id="deleteBtn" class="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg font-semibold transition shrink-0">
                                 Delete Selected
                             </button>
                         </div>
@@ -147,34 +152,34 @@
                 </div>
 
                 <!-- Table Container -->
-                <div class="overflow-x-auto flex-grow mt-4 relative min-h-[300px] w-full">
+                <div class="overflow-x-auto flex-grow mt-3 sm:mt-4 relative min-h-[250px] sm:min-h-[300px] w-full">
                     <!-- Loading Overlay with New Loader Animation + Real-Time Percentage -->
                     <div id="loadingOverlay" class="absolute inset-0 bg-white/95 backdrop-blur-sm z-20 flex flex-col items-center justify-center gap-3 transition-opacity duration-300">
                         <div class="relative flex items-center justify-center">
                             <div class="loader"></div>
-                            <span id="loadingPercentage" class="absolute text-base font-bold text-white drop-shadow">0%</span>
+                            <span id="loadingPercentage" class="absolute font-bold text-white drop-shadow">0%</span>
                         </div>
-                        <span id="loadingStatusText" class="text-base font-semibold text-slate-600 text-center px-4">Connecting to Google Drive...</span>
+                        <span id="loadingStatusText" class="font-semibold text-slate-600 text-center px-4">Connecting to Google Drive...</span>
                     </div>
 
-                    <table class="w-full text-left border-collapse min-w-[600px]">
+                    <table class="w-full text-left border-collapse min-w-[550px]">
                         <thead>
-                            <tr class="bg-slate-100 text-slate-600 text-base uppercase tracking-wider">
-                                <th class="p-3 w-10 text-center"><input type="checkbox" id="selectAll" class="rounded"></th>
-                                <th class="p-3 w-16">Sl No</th>
-                                <th class="p-3">Name of the Work</th>
-                                <th class="p-3 w-40">Date of Entry</th>
-                                <th class="p-3 w-44 text-center">Action</th>
+                            <tr class="bg-slate-100 text-slate-600 uppercase tracking-wider">
+                                <th class="p-2.5 sm:p-3 w-10 text-center"><input type="checkbox" id="selectAll" class="rounded"></th>
+                                <th class="p-2.5 sm:p-3 w-14 sm:w-16">Sl No</th>
+                                <th class="p-2.5 sm:p-3">Name of the Work</th>
+                                <th class="p-2.5 sm:p-3 w-32 sm:w-40">Date of Entry</th>
+                                <th class="p-2.5 sm:p-3 w-36 sm:w-44 text-center">Action</th>
                             </tr>
                         </thead>
-                        <tbody id="workTableBody" class="divide-y divide-slate-200 text-lg">
+                        <tbody id="workTableBody" class="divide-y divide-slate-200">
                             <!-- Dynamic rows will be loaded here -->
                         </tbody>
                     </table>
                 </div>
 
                 <!-- Pagination Container -->
-                <div id="paginationContainer" class="flex flex-col sm:flex-row justify-between items-center pt-4 border-t mt-4 gap-3 text-base text-slate-600">
+                <div id="paginationContainer" class="flex flex-col sm:flex-row justify-between items-center pt-3 sm:pt-4 border-t mt-3 sm:mt-4 gap-3 text-slate-600">
                     <span id="paginationInfo">Showing 0-0 of 0 entries</span>
                     <div class="flex gap-2 w-full sm:w-auto justify-between sm:justify-end">
                         <button id="prevPageBtn" class="px-3 py-1 bg-slate-100 hover:bg-slate-200 rounded-lg font-semibold disabled:opacity-50 flex-1 sm:flex-initial text-center" disabled>Previous</button>
@@ -187,7 +192,7 @@
 
     </main>
 
-    <footer class="bg-white border-t py-3 text-center text-base text-slate-400 px-4">
+    <footer class="bg-white border-t py-3 text-center text-slate-400 px-4">
         GitHub Pages Frontend Connected to Apps Script
     </footer>
 
@@ -204,7 +209,7 @@
             const container = document.getElementById('toastContainer');
             const toast = document.createElement('div');
             let bgClass = type === 'success' ? 'bg-emerald-600' : 'bg-red-600';
-            toast.className = `${bgClass} text-white px-5 py-3 rounded-xl shadow-lg pointer-events-auto flex items-center justify-between gap-4 text-base transition-all duration-300 opacity-0 translate-y-2`;
+            toast.className = `${bgClass} text-white px-4 py-2.5 sm:px-5 sm:py-3 rounded-xl shadow-lg pointer-events-auto flex items-center justify-between gap-4 transition-all duration-300 opacity-0 translate-y-2`;
             toast.innerHTML = `<span>${message}</span>`;
             
             container.appendChild(toast);
@@ -331,27 +336,27 @@
                 const tr = document.createElement('tr');
                 tr.className = 'hover:bg-slate-50';
                 tr.innerHTML = `
-                    <td class="p-3 text-center"><input type="checkbox" class="row-select" data-folder-id="${row.folderId}"></td>
-                    <td class="p-3 text-slate-500">${actualIndex}</td>
-                    <td class="p-3 text-slate-800 break-words">${row.workName}</td>
-                    <td class="p-3 text-slate-600 whitespace-nowrap">${row.entryDate}</td>
-                    <td class="p-3 text-center">
-                        <div class="flex items-center justify-center gap-2">
+                    <td class="p-2.5 sm:p-3 text-center"><input type="checkbox" class="row-select" data-folder-id="${row.folderId}"></td>
+                    <td class="p-2.5 sm:p-3 text-slate-500">${actualIndex}</td>
+                    <td class="p-2.5 sm:p-3 text-slate-800 break-words">${row.workName}</td>
+                    <td class="p-2.5 sm:p-3 text-slate-600 whitespace-nowrap">${row.entryDate}</td>
+                    <td class="p-2.5 sm:p-3 text-center">
+                        <div class="flex items-center justify-center gap-1.5 sm:gap-2">
                             <!-- Open Folder Icon -->
                             <a href="${row.folderUrl}" target="_blank" title="Open Folder in Drive" class="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                                <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
                             </a>
                             <!-- Download Folder as ZIP -->
                             <button onclick="downloadFolder('${row.folderId}', '${row.workName.replace(/'/g, "\\'")}')" title="Download Folder as ZIP" class="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-lg transition">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                                <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
                             </button>
                             <!-- Edit/Rename Folder Icon -->
                             <button onclick="editFolder('${row.folderId}', '${row.workName.replace(/'/g, "\\'")}')" title="Rename Folder" class="p-1.5 text-amber-600 hover:bg-amber-50 rounded-lg transition">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                             </button>
                             <!-- Delete Folder Icon -->
                             <button onclick="deleteSingleFolder('${row.folderId}')" title="Delete Folder" class="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                             </button>
                         </div>
                     </td>
@@ -589,4 +594,3 @@
     </script>
 </body>
 </html>
-
