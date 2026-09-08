@@ -9,7 +9,7 @@
         body {
             font-family: 'Aptos Serif', 'Segoe UI', serif;
             font-weight: 600;
-            font-size: 25px;
+            font-size: 24px;
         }
         input, textarea, button, table {
             font-weight: 400;
@@ -39,7 +39,7 @@
         </div>
     </div>
 
-    <!-- Header (Title bar search removed) -->
+    <!-- Header -->
     <header class="bg-blue-600 text-white shadow-md">
         <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
             <h1 class="text-3xl tracking-wide">Work Folder Management System</h1>
@@ -49,7 +49,7 @@
     <!-- Main Container -->
     <main class="max-w-7xl mx-auto px-4 py-6 flex-grow grid grid-cols-1 lg:grid-cols-3 gap-6 w-full">
         
-        <!-- Left Column: Create Work Form Only (Settings Removed) -->
+        <!-- Left Column: Create Work Form Only -->
         <div class="lg:col-span-1 flex flex-col gap-6">
             
             <!-- Create Work Card -->
@@ -87,7 +87,7 @@
 
         <!-- Right Column: Details of Works Table -->
         <div class="lg:col-span-2 flex flex-col gap-4">
-            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex-grow flex flex-col">
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex-grow flex flex-col relative">
                 
                 <div class="flex flex-col sm:flex-row justify-between items-center pb-4 border-b gap-4">
                     <h2 class="text-xl text-slate-700">Details of Works</h2>
@@ -111,7 +111,19 @@
                 </div>
 
                 <!-- Table Container -->
-                <div class="overflow-x-auto flex-grow mt-4">
+                <div class="overflow-x-auto flex-grow mt-4 relative min-h-[300px]">
+                    <!-- Circular Loading Overlay with Percentage -->
+                    <div id="loadingOverlay" class="absolute inset-0 bg-white/80 backdrop-blur-sm z-20 flex flex-col items-center justify-center gap-3 transition-opacity duration-300">
+                        <div class="relative flex items-center justify-center">
+                            <svg class="w-20 h-20 transform -rotate-90">
+                                <circle cx="40" cy="40" r="34" stroke="currentColor" stroke-width="6" class="text-slate-200" fill="transparent"></circle>
+                                <circle id="loadingCircle" cx="40" cy="40" r="34" stroke="currentColor" stroke-width="6" class="text-blue-600 transition-all duration-200" fill="transparent" stroke-dasharray="213.6" stroke-dashoffset="213.6"></circle>
+                            </svg>
+                            <span id="loadingPercentage" class="absolute text-sm font-bold text-slate-700">0%</span>
+                        </div>
+                        <span class="text-sm font-semibold text-slate-500">Loading entries...</span>
+                    </div>
+
                     <table class="w-full text-left border-collapse">
                         <thead>
                             <tr class="bg-slate-100 text-slate-600 text-base uppercase tracking-wider">
@@ -141,37 +153,31 @@
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxUvgiK-Iih8Vgh5F8-e7HiXAJHszCzFDNzwS9xMH9tS0EJBh4hJVH99jpsyajPUJZc/exec";
         const DEFAULT_FOLDER_ID = "1vmeGBBB1qEdHqdPxMU4OHMEIJbsKIzRt";
 
-        // Web App Toast Notification System
+        // Toast Notification System
         function showToast(message, type = 'success') {
             const container = document.getElementById('toastContainer');
             const toast = document.createElement('div');
-            
             let bgClass = type === 'success' ? 'bg-emerald-600' : 'bg-red-600';
             toast.className = `${bgClass} text-white px-5 py-3 rounded-xl shadow-lg pointer-events-auto flex items-center justify-between gap-4 text-base transition-all duration-300 opacity-0 translate-y-2`;
             toast.innerHTML = `<span>${message}</span>`;
             
             container.appendChild(toast);
-            setTimeout(() => {
-                toast.classList.remove('opacity-0', 'translate-y-2');
-            }, 10);
-
+            setTimeout(() => toast.classList.remove('opacity-0', 'translate-y-2'), 10);
             setTimeout(() => {
                 toast.classList.add('opacity-0', 'translate-y-2');
                 setTimeout(() => toast.remove(), 300);
             }, 3500);
         }
 
-        // Web App Custom Modal Confirmation System
+        // Custom Modal Confirmation System
         function showConfirmModal(title, message, onConfirm) {
             const modal = document.getElementById('confirmModal');
-            const modalTitle = document.getElementById('modalTitle');
-            const modalMessage = document.getElementById('modalMessage');
+            document.getElementById('modalTitle').textContent = title;
+            document.getElementById('modalMessage').textContent = message;
+            modal.classList.remove('hidden');
+
             const confirmBtn = document.getElementById('modalConfirmBtn');
             const cancelBtn = document.getElementById('modalCancelBtn');
-
-            modalTitle.textContent = title;
-            modalMessage.textContent = message;
-            modal.classList.remove('hidden');
 
             const cleanUp = () => {
                 modal.classList.add('hidden');
@@ -183,8 +189,34 @@
                 cleanUp();
                 onConfirm();
             });
-
             document.getElementById('modalCancelBtn').addEventListener('click', cleanUp);
+        }
+
+        // Circular Loading Progress Animation Handler
+        function animateLoading(onComplete) {
+            const overlay = document.getElementById('loadingOverlay');
+            const circle = document.getElementById('loadingCircle');
+            const percentageText = document.getElementById('loadingPercentage');
+            
+            overlay.classList.remove('hidden', 'opacity-0');
+            let progress = 0;
+            const circumference = 213.6; // 2 * pi * 34
+
+            const interval = setInterval(() => {
+                progress += Math.floor(Math.random() * 15) + 10;
+                if (progress >= 100) {
+                    progress = 100;
+                    clearInterval(interval);
+                    setTimeout(() => {
+                        overlay.classList.add('opacity-0');
+                        setTimeout(() => overlay.classList.add('hidden'), 300);
+                        if (onComplete) onComplete();
+                    }, 200);
+                }
+                let offset = circumference - (progress / 100) * circumference;
+                circle.style.strokeDashoffset = offset;
+                percentageText.textContent = progress + '%';
+            }, 60);
         }
 
         // Filter functionality for the table search box
@@ -203,18 +235,17 @@
             checkboxes.forEach(cb => cb.checked = this.checked);
         });
 
-        // Load table data using JSONP
+        // Load table data using JSONP with circular loading animation
         window.loadTableData = function() {
-            const tbody = document.getElementById('workTableBody');
-            tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-500">Loading entries...</td></tr>`;
+            animateLoading(() => {
+                const oldScript = document.getElementById('jsonpScript');
+                if (oldScript) oldScript.remove();
 
-            const oldScript = document.getElementById('jsonpScript');
-            if (oldScript) oldScript.remove();
-
-            const script = document.createElement('script');
-            script.id = 'jsonpScript';
-            script.src = `${SCRIPT_URL}?callback=handleTableData`;
-            document.body.appendChild(script);
+                const script = document.createElement('script');
+                script.id = 'jsonpScript';
+                script.src = `${SCRIPT_URL}?callback=handleTableData`;
+                document.body.appendChild(script);
+            });
         };
 
         window.handleTableData = function(data) {
@@ -226,7 +257,7 @@
                 return;
             }
 
-            // Sort results by Date of Entry (latest first) assuming format DD-MM-YYYY or YYYYMMDD
+            // Sort results by Date of Entry (latest first)
             data.sort((a, b) => {
                 let dateA = a.entryDate.includes('-') ? a.entryDate.split('-').reverse().join('') : a.entryDate;
                 let dateB = b.entryDate.includes('-') ? b.entryDate.split('-').reverse().join('') : b.entryDate;
@@ -276,7 +307,7 @@
                             deleteBtn.disabled = false;
                             deleteBtn.textContent = 'Delete Selected';
                             document.getElementById('selectAll').checked = false;
-                            setTimeout(window.loadTableData, 1000);
+                            setTimeout(window.loadTableData, 500);
                             return;
                         }
 
@@ -322,7 +353,7 @@
                 document.getElementById('workForm').reset();
                 submitBtn.disabled = false;
                 submitBtn.textContent = 'Create New Entry';
-                setTimeout(window.loadTableData, 1500);
+                setTimeout(window.loadTableData, 1000);
             })
             .catch(error => {
                 console.error('Error:', error);
