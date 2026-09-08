@@ -23,24 +23,24 @@
 
         /* New loader animation */
         .loader {
-          width: 60px;
-          aspect-ratio: 1;
-          background: 
+         width: 60px;
+         aspect-ratio: 1;
+         background: 
             linear-gradient(45deg,#60B99A 50%,#0000 0),
             linear-gradient(45deg,#0000 50%,#60B99A 0),
             linear-gradient(-45deg,#f77825 50%,#0000 0),
             linear-gradient(-45deg,#0000 50%,#f77825 0),
             linear-gradient(#554236 0 0);
-          background-size: 50% 50%;
-          background-repeat: no-repeat;
-          animation: l18 1.5s infinite;
+         background-size: 50% 50%;
+         background-repeat: no-repeat;
+         animation: l18 1.5s infinite;
         }
         @keyframes l18{
-          0%   {background-position:50% 50%,50% 50%,50%  50% ,50% 50%,50% 50%}
-          25%  {background-position:0  100%,100%  0,50%  50% ,50% 50%,50% 50%}
-          50%  {background-position:0  100%,100%  0,100% 100%,0   0  ,50% 50%}
-          75%  {background-position:50% 50%,50% 50%,100% 100%,0   0  ,50% 50%}
-          100% {background-position:50% 50%,50% 50%,50%  50% ,50% 50%,50% 50%}
+         0%   {background-position:50% 50%,50% 50%,50%  50% ,50% 50%,50% 50%}
+         25%  {background-position:0  100%,100%  0,50%  50% ,50% 50%,50% 50%}
+         50%  {background-position:0  100%,100%  0,100% 100%,0   0  ,50% 50%}
+         75%  {background-position:50% 50%,50% 50%,100% 100%,0   0  ,50% 50%}
+         100% {background-position:50% 50%,50% 50%,50%  50% ,50% 50%,50% 50%}
         }
     </style>
 </head>
@@ -171,6 +171,15 @@
                     </table>
                 </div>
 
+                <!-- Pagination Container -->
+                <div id="paginationContainer" class="flex justify-between items-center pt-4 border-t mt-4 text-base text-slate-600">
+                    <span id="paginationInfo">Showing 0-0 of 0 entries</span>
+                    <div class="flex gap-2">
+                        <button id="prevPageBtn" class="px-3 py-1 bg-slate-100 hover:bg-slate-200 rounded-lg font-semibold disabled:opacity-50" disabled>Previous</button>
+                        <button id="nextPageBtn" class="px-3 py-1 bg-slate-100 hover:bg-slate-200 rounded-lg font-semibold disabled:opacity-50" disabled>Next</button>
+                    </div>
+                </div>
+
             </div>
         </div>
 
@@ -183,6 +192,10 @@
     <script>
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxUvgiK-Iih8Vgh5F8-e7HiXAJHszCzFDNzwS9xMH9tS0EJBh4hJVH99jpsyajPUJZc/exec";
         const DEFAULT_FOLDER_ID = "1vmeGBBB1qEdHqdPxMU4OHMEIJbsKIzRt";
+
+        let allTableData = [];
+        let currentPage = 1;
+        const rowsPerPage = 20;
 
         // Toast Notification System
         function showToast(message, type = 'success') {
@@ -250,7 +263,6 @@
         }
 
         // Smooth Percentage Progress Animation Controllers
-        // (Loader graphic is now the CSS "l18" animation; percentage text still updates in real time)
         let progressInterval = null;
         function startLoading(statusMessage) {
             const overlay = document.getElementById('loadingOverlay');
@@ -291,14 +303,94 @@
             }, 300);
         }
 
+        // Render Table Data with Pagination
+        function renderTable(dataToRender) {
+            const tbody = document.getElementById('workTableBody');
+            tbody.innerHTML = '';
+            
+            if (!dataToRender || dataToRender.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-500">No entries found.</td></tr>`;
+                document.getElementById('paginationInfo').textContent = 'Showing 0-0 of 0 entries';
+                document.getElementById('prevPageBtn').disabled = true;
+                document.getElementById('nextPageBtn').disabled = true;
+                return;
+            }
+
+            const totalPages = Math.ceil(dataToRender.length / rowsPerPage);
+            if (currentPage > totalPages) currentPage = totalPages;
+            if (currentPage < 1) currentPage = 1;
+
+            const startIdx = (currentPage - 1) * rowsPerPage;
+            const endIdx = startIdx + rowsPerPage;
+            const paginatedData = dataToRender.slice(startIdx, endIdx);
+
+            paginatedData.forEach((row, index) => {
+                const actualIndex = startIdx + index + 1;
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-50';
+                tr.innerHTML = `
+                    <td class="p-3 text-center"><input type="checkbox" class="row-select" data-folder-id="${row.folderId}"></td>
+                    <td class="p-3 text-slate-500">${actualIndex}</td>
+                    <td class="p-3 text-slate-800">${row.workName}</td>
+                    <td class="p-3 text-slate-600">${row.entryDate}</td>
+                    <td class="p-3 text-center">
+                        <div class="flex items-center justify-center gap-2">
+                            <!-- Open Folder Icon -->
+                            <a href="${row.folderUrl}" target="_blank" title="Open Folder in Drive" class="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                            </a>
+                            <!-- Download Folder as ZIP -->
+                            <button onclick="downloadFolder('${row.folderId}', '${row.workName.replace(/'/g, "\\'")}')" title="Download Folder as ZIP" class="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-lg transition">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                            </button>
+                            <!-- Edit/Rename Folder Icon -->
+                            <button onclick="editFolder('${row.folderId}', '${row.workName.replace(/'/g, "\\'")}')" title="Rename Folder" class="p-1.5 text-amber-600 hover:bg-amber-50 rounded-lg transition">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                            </button>
+                            <!-- Delete Folder Icon -->
+                            <button onclick="deleteSingleFolder('${row.folderId}')" title="Delete Folder" class="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                            </button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            // Update Pagination Info & Buttons
+            document.getElementById('paginationInfo').textContent = `Showing ${startIdx + 1}-${Math.min(endIdx, dataToRender.length)} of ${dataToRender.length} entries`;
+            document.getElementById('prevPageBtn').disabled = currentPage === 1;
+            document.getElementById('nextPageBtn').disabled = currentPage === totalPages || totalPages === 0;
+        }
+
         // Filter functionality for table search box
         document.getElementById('tableSearchInput').addEventListener('input', function(e) {
             const term = e.target.value.toLowerCase();
-            const rows = document.querySelectorAll('#workTableBody tr');
-            rows.forEach(row => {
-                const text = row.innerText.toLowerCase();
-                row.style.display = text.includes(term) ? '' : 'none';
+            const filteredData = allTableData.filter(row => {
+                return row.workName.toLowerCase().includes(term) || row.entryDate.toLowerCase().includes(term);
             });
+            currentPage = 1;
+            renderTable(filteredData);
+        });
+
+        // Pagination Button Handlers
+        document.getElementById('prevPageBtn').addEventListener('click', () => {
+            if (currentPage > 1) {
+                currentPage--;
+                const term = document.getElementById('tableSearchInput').value.toLowerCase();
+                const filteredData = allTableData.filter(row => row.workName.toLowerCase().includes(term) || row.entryDate.toLowerCase().includes(term));
+                renderTable(filteredData);
+            }
+        });
+
+        document.getElementById('nextPageBtn').addEventListener('click', () => {
+            const term = document.getElementById('tableSearchInput').value.toLowerCase();
+            const filteredData = allTableData.filter(row => row.workName.toLowerCase().includes(term) || row.entryDate.toLowerCase().includes(term));
+            const totalPages = Math.ceil(filteredData.length / rowsPerPage);
+            if (currentPage < totalPages) {
+                currentPage++;
+                renderTable(filteredData);
+            }
         });
 
         // Select All Checkbox Handler
@@ -322,11 +414,9 @@
 
         window.handleTableData = function(data) {
             stopLoading(() => {
-                const tbody = document.getElementById('workTableBody');
-                tbody.innerHTML = '';
-                
                 if (!data || data.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-500">No entries found.</td></tr>`;
+                    allTableData = [];
+                    renderTable([]);
                     return;
                 }
 
@@ -337,37 +427,9 @@
                     return dateB.localeCompare(dateA);
                 });
 
-                data.forEach((row, index) => {
-                    const tr = document.createElement('tr');
-                    tr.className = 'hover:bg-slate-50';
-                    tr.innerHTML = `
-                        <td class="p-3 text-center"><input type="checkbox" class="row-select" data-folder-id="${row.folderId}"></td>
-                        <td class="p-3 text-slate-500">${index + 1}</td>
-                        <td class="p-3 text-slate-800">${row.workName}</td>
-                        <td class="p-3 text-slate-600">${row.entryDate}</td>
-                        <td class="p-3 text-center">
-                            <div class="flex items-center justify-center gap-2">
-                                <!-- Open Folder Icon -->
-                                <a href="${row.folderUrl}" target="_blank" title="Open Folder in Drive" class="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
-                                </a>
-                                <!-- Download Folder as ZIP -->
-                                <button onclick="downloadFolder('${row.folderId}', '${row.workName.replace(/'/g, "\\'")}')" title="Download Folder as ZIP" class="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-lg transition">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-                                </button>
-                                <!-- Edit/Rename Folder Icon -->
-                                <button onclick="editFolder('${row.folderId}', '${row.workName.replace(/'/g, "\\'")}')" title="Rename Folder" class="p-1.5 text-amber-600 hover:bg-amber-50 rounded-lg transition">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-                                </button>
-                                <!-- Delete Folder Icon -->
-                                <button onclick="deleteSingleFolder('${row.folderId}')" title="Delete Folder" class="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                                </button>
-                            </div>
-                        </td>
-                    `;
-                    tbody.appendChild(tr);
-                });
+                allTableData = data;
+                currentPage = 1;
+                renderTable(allTableData);
             });
         };
 
