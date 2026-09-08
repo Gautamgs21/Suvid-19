@@ -20,6 +20,13 @@
         #toastContainer {
             transition: all 0.3s ease-in-out;
         }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .spinner {
+            animation: spin 1s linear infinite;
+        }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col relative">
@@ -112,16 +119,10 @@
 
                 <!-- Table Container -->
                 <div class="overflow-x-auto flex-grow mt-4 relative min-h-[300px]">
-                    <!-- Circular Loading Overlay with Real Percentage -->
+                    <!-- Clean Professional Spinner Loading Overlay -->
                     <div id="loadingOverlay" class="absolute inset-0 bg-white/90 backdrop-blur-sm z-20 flex flex-col items-center justify-center gap-3 transition-opacity duration-300">
-                        <div class="relative flex items-center justify-center">
-                            <svg class="w-20 h-20 transform -rotate-90">
-                                <circle cx="40" cy="40" r="34" stroke="currentColor" stroke-width="6" class="text-slate-200" fill="transparent"></circle>
-                                <circle id="loadingCircle" cx="40" cy="40" r="34" stroke="currentColor" stroke-width="6" class="text-blue-600 transition-all duration-300" fill="transparent" stroke-dasharray="213.6" stroke-dashoffset="213.6"></circle>
-                            </svg>
-                            <span id="loadingPercentage" class="absolute text-sm font-bold text-slate-700">0%</span>
-                        </div>
-                        <span id="loadingStatusText" class="text-sm font-semibold text-slate-500">Connecting to Google Drive...</span>
+                        <div class="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full spinner"></div>
+                        <span id="loadingStatusText" class="text-base font-semibold text-slate-600">Scanning Google Drive Folders...</span>
                     </div>
 
                     <table class="w-full text-left border-collapse">
@@ -192,57 +193,19 @@
             document.getElementById('modalCancelBtn').addEventListener('click', cleanUp);
         }
 
-        // Real Circular Progress Controllers
-        let progressInterval = null;
-        function startRealLoading(statusMessage) {
+        // Loading Overlay Controllers
+        function showLoading(text) {
             const overlay = document.getElementById('loadingOverlay');
-            const circle = document.getElementById('loadingCircle');
-            const percentageText = document.getElementById('loadingPercentage');
-            const statusText = document.getElementById('loadingStatusText');
-            
+            document.getElementById('loadingStatusText').textContent = text;
             overlay.classList.remove('hidden', 'opacity-0');
-            statusText.textContent = statusMessage;
-            
-            let currentPercent = 10;
-            const circumference = 213.6;
-
-            // Initialize at 10%
-            circle.style.strokeDashoffset = circumference - (currentPercent / 100) * circumference;
-            percentageText.textContent = currentPercent + '%';
-
-            // Gradually increment progress up to 90% while waiting for network response
-            if (progressInterval) clearInterval(progressInterval);
-            progressInterval = setInterval(() => {
-                if (currentPercent < 90) {
-                    currentPercent += Math.floor(Math.random() * 5) + 2;
-                    if (currentPercent > 90) currentPercent = 90;
-                    let offset = circumference - (currentPercent / 100) * circumference;
-                    circle.style.strokeDashoffset = offset;
-                    percentageText.textContent = currentPercent + '%';
-                }
-            }, 300);
         }
 
-        function stopRealLoading(onComplete) {
-            if (progressInterval) clearInterval(progressInterval);
+        function hideLoading(onComplete) {
             const overlay = document.getElementById('loadingOverlay');
-            const circle = document.getElementById('loadingCircle');
-            const percentageText = document.getElementById('loadingPercentage');
-            const statusText = document.getElementById('loadingStatusText');
-            const circumference = 213.6;
-
-            // Snap to 100%
-            let offset = circumference - (100 / 100) * circumference;
-            circle.style.strokeDashoffset = offset;
-            percentageText.textContent = '100%';
-            statusText.textContent = 'Complete!';
-
+            overlay.classList.add('opacity-0');
             setTimeout(() => {
-                overlay.classList.add('opacity-0');
-                setTimeout(() => {
-                    overlay.classList.add('hidden');
-                    if (onComplete) onComplete();
-                }, 300);
+                overlay.classList.add('hidden');
+                if (onComplete) onComplete();
             }, 300);
         }
 
@@ -262,9 +225,9 @@
             checkboxes.forEach(cb => cb.checked = this.checked);
         });
 
-        // Load table data using JSONP with real async tracking
+        // Load table data using JSONP with spinner overlay
         window.loadTableData = function() {
-            startRealLoading('Scanning Google Drive Folders...');
+            showLoading('Scanning Google Drive Folders...');
 
             const oldScript = document.getElementById('jsonpScript');
             if (oldScript) oldScript.remove();
@@ -276,7 +239,7 @@
         };
 
         window.handleTableData = function(data) {
-            stopRealLoading(() => {
+            hideLoading(() => {
                 const tbody = document.getElementById('workTableBody');
                 tbody.innerHTML = '';
                 
@@ -323,13 +286,13 @@
                 'Delete Entries',
                 `Are you sure you want to delete ${selectedCheckboxes.length} selected folder(s)?`,
                 () => {
-                    startRealLoading('Deleting selected folders...');
+                    showLoading('Deleting selected folders...');
                     let folderIds = Array.from(selectedCheckboxes).map(cb => cb.getAttribute('data-folder-id'));
                     
                     let index = 0;
                     function deleteNext() {
                         if (index >= folderIds.length) {
-                            stopRealLoading(() => {
+                            hideLoading(() => {
                                 showToast('Selected folders deleted successfully!', 'success');
                                 document.getElementById('selectAll').checked = false;
                                 setTimeout(window.loadTableData, 500);
@@ -352,14 +315,14 @@
             );
         });
 
-        // Handle Form Submission with Real Loading State
+        // Handle Form Submission with Spinner State
         document.getElementById('workForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const submitBtn = document.getElementById('submitBtn');
             submitBtn.disabled = true;
             submitBtn.textContent = 'Creating...';
 
-            startRealLoading('Creating Drive Folder & Remarks...');
+            showLoading('Creating Drive Folder & Remarks...');
 
             const payload = {
                 entryDate: document.getElementById('entryDate').value,
@@ -377,7 +340,7 @@
                 body: JSON.stringify(payload)
             })
             .then(() => {
-                stopRealLoading(() => {
+                hideLoading(() => {
                     showToast('Entry Created Successfully!', 'success');
                     document.getElementById('workForm').reset();
                     submitBtn.disabled = false;
@@ -387,7 +350,7 @@
             })
             .catch(error => {
                 console.error('Error:', error);
-                stopRealLoading(() => {
+                hideLoading(() => {
                     showToast('Error creating entry.', 'error');
                     submitBtn.disabled = false;
                     submitBtn.textContent = 'Create New Entry';
