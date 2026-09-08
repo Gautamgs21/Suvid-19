@@ -9,7 +9,7 @@
         body {
             font-family: 'Aptos Display', 'Segoe UI', sans-serif;
             font-weight: 600;
-            font-size: 22px;
+            font-size: 26px;
         }
         input, textarea, button, table {
             font-weight: 400;
@@ -76,17 +76,9 @@
             <!-- Settings Card -->
             <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
                 <h2 class="text-xl text-slate-700 border-b pb-3 mb-4">Settings</h2>
-                <div class="space-y-3 text-lg">
-                    <div>
-                        <label class="block text-base uppercase text-slate-500 mb-1">Change Default Work Folder Path / ID</label>
-                        <div class="flex gap-2">
-                            <input type="text" id="defaultFolderInput" value="root" 
-                                class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg">
-                            <button type="button" id="saveFolderBtn" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-base font-semibold transition shrink-0">
-                                Save
-                            </button>
-                        </div>
-                    </div>
+                <div class="text-slate-600 text-base">
+                    <p class="font-semibold">Target Drive Folder:</p>
+                    <p class="text-sm text-slate-500 break-all mt-1">Work_DataBase (ID: 1vmeGBBB1qEdHqdPxMU4OHMEIJbsKIzRt)</p>
                 </div>
             </div>
 
@@ -146,6 +138,7 @@
 
     <script>
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxUvgiK-Iih8Vgh5F8-e7HiXAJHszCzFDNzwS9xMH9tS0EJBh4hJVH99jpsyajPUJZc/exec";
+        const DEFAULT_FOLDER_ID = "1vmeGBBB1qEdHqdPxMU4OHMEIJbsKIzRt";
 
         // Filter functionality
         const filterFunction = (e) => {
@@ -161,11 +154,6 @@
         document.getElementById('globalSearchInput').addEventListener('input', function(e) {
             document.getElementById('tableSearchInput').value = e.target.value;
             filterFunction(e);
-        });
-
-        document.getElementById('saveFolderBtn').addEventListener('click', function() {
-            const path = document.getElementById('defaultFolderInput').value;
-            alert('Default Folder ID updated locally to: ' + path);
         });
 
         // Load table data using JSONP to bypass CORS
@@ -221,7 +209,7 @@
                 entryDate: document.getElementById('entryDate').value,
                 workName: document.getElementById('workName').value,
                 remarks: document.getElementById('workRemarks').value,
-                defaultFolderId: document.getElementById('defaultFolderInput').value
+                defaultFolderId: DEFAULT_FOLDER_ID
             };
 
             fetch(SCRIPT_URL, {
