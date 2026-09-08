@@ -7,9 +7,9 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
-            font-family: 'Aptos Serif', 'Segoe UI', serif;
+            font-family: 'Aptos Display', 'Segoe UI', sans-serif;
             font-weight: 600;
-            font-size: 25px;
+            font-size: 22px;
         }
         input, textarea, button, table {
             font-weight: 400;
@@ -19,52 +19,6 @@
         }
         #toastContainer {
             transition: all 0.3s ease-in-out;
-        }
-        
-        /* Custom Loader CSS Provided */
-        .loader {
-            width: 60px;
-            aspect-ratio: 1;
-            display: flex;
-            --c1: linear-gradient(#554236 0 0);
-            --c2: linear-gradient(#F77825 0 0);
-            --s: calc(100%/3) calc(100%/3);
-            background:
-                var(--c1) 0 0, var(--c2) 50% 0, var(--c1) 100% 0,
-                var(--c2) 0 50%, var(--c2) 100% 50%,
-                var(--c1) 0 100%, var(--c2) 50% 100%, var(--c1) 100% 100%;
-            background-repeat: no-repeat;
-            animation: l8-0 1.5s infinite alternate;
-        }
-        .loader:before {
-            content: "";
-            width: calc(100%/3);
-            height: calc(100%/3);
-            background: #60B99A;
-            animation: inherit;
-            animation-delay: 0s; 
-            animation-name: l8-1;
-        }
-        @keyframes l8-0 {
-            0%, 12.49%  {background-size: var(--s),0 0,0 0,0 0,0 0,0 0,0 0,0 0}
-            12.5%, 24.9% {background-size: var(--s),var(--s),0 0,0 0,0 0,0 0,0 0,0 0}
-            25%, 37.4%   {background-size: var(--s),var(--s),var(--s),0 0,0 0,0 0,0 0,0 0}
-            37.5%, 49.9% {background-size: var(--s),var(--s),var(--s),0 0,var(--s),0 0,0 0,0 0}
-            50%, 61.4%   {background-size: var(--s),var(--s),var(--s),0 0,var(--s),0 0,0 0,var(--s)}
-            62.5%, 74.9% {background-size: var(--s),var(--s),var(--s),0 0,var(--s),0 0,var(--s),var(--s)}
-            75%, 86.4%   {background-size: var(--s),var(--s),var(--s),0 0,var(--s),var(--s),var(--s),var(--s)}
-            87.5%, 100%  {background-size: var(--s),var(--s),var(--s),var(--s),var(--s),var(--s),var(--s),var(--s)}
-        }
-        @keyframes l8-1 {
-            0%, 5%    {transform: translate(0,0)}
-            12.5% {transform: translate(100%,0)}
-            25%   {transform: translate(200%,0)}
-            37.5% {transform: translate(200%,100%)}
-            50%   {transform: translate(200%,200%)}
-            62.5% {transform: translate(100%,200%)}
-            75%   {transform: translate(0,200%)}
-            87.5% {transform: translate(0,100%)}
-            95%, 100% {transform: translate(100%,100%)}
         }
     </style>
 </head>
@@ -170,10 +124,16 @@
 
                 <!-- Table Container -->
                 <div class="overflow-x-auto flex-grow mt-4 relative min-h-[300px]">
-                    <!-- Clean Loading Overlay using your custom loader -->
-                    <div id="loadingOverlay" class="absolute inset-0 bg-white/95 backdrop-blur-sm z-20 flex flex-col items-center justify-center gap-4 transition-opacity duration-300">
-                        <div class="loader"></div>
-                        <span id="loadingStatusText" class="text-base font-semibold text-slate-600">Scanning Google Drive Folders...</span>
+                    <!-- Circular Loading Overlay with Percentage -->
+                    <div id="loadingOverlay" class="absolute inset-0 bg-white/95 backdrop-blur-sm z-20 flex flex-col items-center justify-center gap-3 transition-opacity duration-300">
+                        <div class="relative flex items-center justify-center">
+                            <svg class="w-24 h-24 transform -rotate-90">
+                                <circle cx="48" cy="48" r="40" stroke="currentColor" stroke-width="6" class="text-slate-200" fill="transparent"></circle>
+                                <circle id="loadingCircle" cx="48" cy="48" r="40" stroke="currentColor" stroke-width="6" class="text-blue-600 transition-all duration-300" fill="transparent" stroke-dasharray="251.2" stroke-dashoffset="251.2"></circle>
+                            </svg>
+                            <span id="loadingPercentage" class="absolute text-base font-bold text-slate-700">0%</span>
+                        </div>
+                        <span id="loadingStatusText" class="text-base font-semibold text-slate-600">Connecting to Google Drive...</span>
                     </div>
 
                     <table class="w-full text-left border-collapse">
@@ -270,19 +230,54 @@
             document.getElementById('promptCancelBtn').addEventListener('click', cleanUp);
         }
 
-        // Loading Overlay Controllers
-        function showLoading(text) {
+        // Smooth Percentage Progress Animation Controllers
+        let progressInterval = null;
+        function startLoading(statusMessage) {
             const overlay = document.getElementById('loadingOverlay');
-            document.getElementById('loadingStatusText').textContent = text;
+            const circle = document.getElementById('loadingCircle');
+            const percentageText = document.getElementById('loadingPercentage');
+            const statusText = document.getElementById('loadingStatusText');
+            
             overlay.classList.remove('hidden', 'opacity-0');
+            statusText.textContent = statusMessage;
+            
+            let currentPercent = 10;
+            const circumference = 251.2; // 2 * pi * 40
+
+            circle.style.strokeDashoffset = circumference - (currentPercent / 100) * circumference;
+            percentageText.textContent = currentPercent + '%';
+
+            if (progressInterval) clearInterval(progressInterval);
+            progressInterval = setInterval(() => {
+                if (currentPercent < 92) {
+                    currentPercent += Math.floor(Math.random() * 5) + 2;
+                    if (currentPercent > 92) currentPercent = 92;
+                    let offset = circumference - (currentPercent / 100) * circumference;
+                    circle.style.strokeDashoffset = offset;
+                    percentageText.textContent = currentPercent + '%';
+                }
+            }, 200);
         }
 
-        function hideLoading(onComplete) {
+        function stopLoading(onComplete) {
+            if (progressInterval) clearInterval(progressInterval);
             const overlay = document.getElementById('loadingOverlay');
-            overlay.classList.add('opacity-0');
+            const circle = document.getElementById('loadingCircle');
+            const percentageText = document.getElementById('loadingPercentage');
+            const statusText = document.getElementById('loadingStatusText');
+            const circumference = 251.2;
+
+            let offset = circumference - (100 / 100) * circumference;
+            circle.style.strokeDashoffset = offset;
+            percentageText.textContent = '100%';
+            statusText.textContent = 'Complete!';
+
             setTimeout(() => {
-                overlay.classList.add('hidden');
-                if (onComplete) onComplete();
+                overlay.classList.add('opacity-0');
+                setTimeout(() => {
+                    overlay.classList.add('hidden');
+                    if (onComplete) onComplete();
+                }, 300);
             }, 300);
         }
 
@@ -304,7 +299,7 @@
 
         // Load table data using JSONP
         window.loadTableData = function() {
-            showLoading('Scanning Google Drive Folders...');
+            startLoading('Scanning Google Drive Folders...');
 
             const oldScript = document.getElementById('jsonpScript');
             if (oldScript) oldScript.remove();
@@ -316,7 +311,7 @@
         };
 
         window.handleTableData = function(data) {
-            hideLoading(() => {
+            stopLoading(() => {
                 const tbody = document.getElementById('workTableBody');
                 tbody.innerHTML = '';
                 
@@ -333,6 +328,9 @@
                 });
 
                 data.forEach((row, index) => {
+                    // Google Drive download export link format for folders/files
+                    const downloadUrl = `https://drive.google.com/drive/folders/${row.folderId}`;
+
                     const tr = document.createElement('tr');
                     tr.className = 'hover:bg-slate-50';
                     tr.innerHTML = `
@@ -343,11 +341,11 @@
                         <td class="p-3 text-center">
                             <div class="flex items-center justify-center gap-2">
                                 <!-- Open Folder Icon -->
-                                <a href="${row.folderUrl}" target="_blank" title="Open Folder" class="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition">
+                                <a href="${row.folderUrl}" target="_blank" title="Open Folder in Drive" class="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
                                 </a>
-                                <!-- Download Folder Icon -->
-                                <a href="${row.folderUrl}" target="_blank" title="Download Folder" class="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-lg transition">
+                                <!-- Download Folder Icon (Directs to Google Drive folder storage manager view) -->
+                                <a href="${downloadUrl}" target="_blank" title="Manage / Download Folder Files" class="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-lg transition">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
                                 </a>
                                 <!-- Edit/Rename Folder Icon -->
@@ -369,7 +367,7 @@
         // Edit / Rename Folder Action Handler
         window.editFolder = function(folderId, currentName) {
             showPromptModal('Rename Work Folder', currentName, (newName) => {
-                showLoading('Renaming folder...');
+                startLoading('Renaming folder...');
                 const renameScript = document.createElement('script');
                 renameScript.src = `${SCRIPT_URL}?action=rename&folderId=${folderId}&newName=${encodeURIComponent(newName)}&callback=renameDone`;
                 document.body.appendChild(renameScript);
@@ -377,7 +375,7 @@
         };
 
         window.renameDone = function(res) {
-            hideLoading(() => {
+            stopLoading(() => {
                 showToast('Folder renamed successfully!', 'success');
                 setTimeout(window.loadTableData, 500);
             });
@@ -386,7 +384,7 @@
         // Delete Single Folder Action Handler
         window.deleteSingleFolder = function(folderId) {
             showConfirmModal('Delete Entry', 'Are you sure you want to delete this folder?', () => {
-                showLoading('Deleting folder...');
+                startLoading('Deleting folder...');
                 const delScript = document.createElement('script');
                 delScript.src = `${SCRIPT_URL}?action=delete&folderId=${folderId}&callback=singleDeleteDone`;
                 document.body.appendChild(delScript);
@@ -394,7 +392,7 @@
         };
 
         window.singleDeleteDone = function(res) {
-            hideLoading(() => {
+            stopLoading(() => {
                 showToast('Folder deleted successfully!', 'success');
                 setTimeout(window.loadTableData, 500);
             });
@@ -414,13 +412,13 @@
                 'Delete Entries',
                 `Are you sure you want to delete ${selectedCheckboxes.length} selected folder(s)?`,
                 () => {
-                    showLoading('Deleting selected folders...');
+                    startLoading('Deleting selected folders...');
                     let folderIds = Array.from(selectedCheckboxes).map(cb => cb.getAttribute('data-folder-id'));
                     
                     let index = 0;
                     function deleteNext() {
                         if (index >= folderIds.length) {
-                            hideLoading(() => {
+                            stopLoading(() => {
                                 showToast('Selected folders deleted successfully!', 'success');
                                 document.getElementById('selectAll').checked = false;
                                 setTimeout(window.loadTableData, 500);
@@ -450,7 +448,7 @@
             submitBtn.disabled = true;
             submitBtn.textContent = 'Creating...';
 
-            showLoading('Creating Drive Folder & Remarks...');
+            startLoading('Creating Drive Folder & Remarks...');
 
             const payload = {
                 entryDate: document.getElementById('entryDate').value,
@@ -468,7 +466,7 @@
                 body: JSON.stringify(payload)
             })
             .then(() => {
-                hideLoading(() => {
+                stopLoading(() => {
                     showToast('Entry Created Successfully!', 'success');
                     document.getElementById('workForm').reset();
                     submitBtn.disabled = false;
@@ -478,7 +476,7 @@
             })
             .catch(error => {
                 console.error('Error:', error);
-                hideLoading(() => {
+                stopLoading(() => {
                     showToast('Error creating entry.', 'error');
                     submitBtn.disabled = false;
                     submitBtn.textContent = 'Create New Entry';
