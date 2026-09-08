@@ -1,3 +1,5 @@
+To make the application fully responsive and fit nicely on smaller screens like your iPhone mini without breaking the layout, we can add a few responsive Tailwind classes (grid-cols-1, flex wrapping, and overflow control) while keeping your exact design, fonts, loader, and pagination intact.
+Here is the updated code with mobile responsiveness fixed:
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -44,10 +46,10 @@
         }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col relative">
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col relative overflow-x-hidden">
 
     <!-- Toast Notification Container -->
-    <div id="toastContainer" class="fixed top-5 right-5 z-50 flex flex-col gap-3 pointer-events-none"></div>
+    <div id="toastContainer" class="fixed top-5 right-5 z-50 flex flex-col gap-3 pointer-events-none max-w-[90vw]"></div>
 
     <!-- Custom Web App Confirmation Modal -->
     <div id="confirmModal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
@@ -76,20 +78,20 @@
     <!-- Header -->
     <header class="bg-blue-600 text-white shadow-md">
         <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-            <h1 class="text-3xl tracking-wide">Work Folder Management System</h1>
+            <h1 class="text-2xl sm:text-3xl tracking-wide">Work Folder Management System</h1>
         </div>
     </header>
 
     <!-- Main Container -->
-    <main class="max-w-7xl mx-auto px-4 py-6 flex-grow grid grid-cols-1 lg:grid-cols-3 gap-6 w-full">
+    <main class="max-w-7xl mx-auto px-3 sm:px-4 py-6 flex-grow grid grid-cols-1 lg:grid-cols-3 gap-6 w-full">
         
         <!-- Left Column: Create Work Form Only -->
         <div class="lg:col-span-1 flex flex-col gap-6">
             
             <!-- Create Work Card -->
-            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+            <div class="bg-white p-4 sm:p-6 rounded-xl shadow-sm border border-slate-200">
                 <h2 class="text-xl text-slate-700 border-b pb-3 mb-4 flex items-center gap-2">
-                    <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-6 h-6 text-blue-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                     </svg>
                     Create Work Entry
@@ -120,42 +122,44 @@
         </div>
 
         <!-- Right Column: Details of Works Table -->
-        <div class="lg:col-span-2 flex flex-col gap-4">
-            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex-grow flex flex-col">
+        <div class="lg:col-span-2 flex flex-col gap-4 min-w-0">
+            <div class="bg-white p-4 sm:p-6 rounded-xl shadow-sm border border-slate-200 flex-grow flex flex-col min-w-0">
                 
-                <div class="flex flex-col sm:flex-row justify-between items-center pb-4 border-b gap-4">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center pb-4 border-b gap-4">
                     <h2 class="text-xl text-slate-700">Details of Works</h2>
                     
                     <!-- Action Bar with Table Search Box -->
-                    <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
-                        <div class="relative">
+                    <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-start sm:justify-end">
+                        <div class="relative w-full sm:w-auto">
                             <input type="text" id="tableSearchInput" placeholder="Filter table results..." 
-                                class="pl-8 pr-3 py-1.5 border border-slate-300 rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-blue-500 w-52 sm:w-64">
+                                class="pl-8 pr-3 py-1.5 border border-slate-300 rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-64">
                             <svg class="w-5 h-5 text-slate-400 absolute left-2.5 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                             </svg>
                         </div>
-                        <button id="refreshBtn" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-base font-semibold transition shrink-0">
-                            Refresh
-                        </button>
-                        <button id="deleteBtn" class="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg text-base font-semibold transition shrink-0">
-                            Delete Selected
-                        </button>
+                        <div class="flex gap-2 w-full sm:w-auto justify-end">
+                            <button id="refreshBtn" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-base font-semibold transition shrink-0">
+                                Refresh
+                            </button>
+                            <button id="deleteBtn" class="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg text-base font-semibold transition shrink-0">
+                                Delete Selected
+                            </button>
+                        </div>
                     </div>
                 </div>
 
                 <!-- Table Container -->
-                <div class="overflow-x-auto flex-grow mt-4 relative min-h-[300px]">
+                <div class="overflow-x-auto flex-grow mt-4 relative min-h-[300px] w-full">
                     <!-- Loading Overlay with New Loader Animation + Real-Time Percentage -->
                     <div id="loadingOverlay" class="absolute inset-0 bg-white/95 backdrop-blur-sm z-20 flex flex-col items-center justify-center gap-3 transition-opacity duration-300">
                         <div class="relative flex items-center justify-center">
                             <div class="loader"></div>
                             <span id="loadingPercentage" class="absolute text-base font-bold text-white drop-shadow">0%</span>
                         </div>
-                        <span id="loadingStatusText" class="text-base font-semibold text-slate-600">Connecting to Google Drive...</span>
+                        <span id="loadingStatusText" class="text-base font-semibold text-slate-600 text-center px-4">Connecting to Google Drive...</span>
                     </div>
 
-                    <table class="w-full text-left border-collapse">
+                    <table class="w-full text-left border-collapse min-w-[600px]">
                         <thead>
                             <tr class="bg-slate-100 text-slate-600 text-base uppercase tracking-wider">
                                 <th class="p-3 w-10 text-center"><input type="checkbox" id="selectAll" class="rounded"></th>
@@ -172,11 +176,11 @@
                 </div>
 
                 <!-- Pagination Container -->
-                <div id="paginationContainer" class="flex justify-between items-center pt-4 border-t mt-4 text-base text-slate-600">
+                <div id="paginationContainer" class="flex flex-col sm:flex-row justify-between items-center pt-4 border-t mt-4 gap-3 text-base text-slate-600">
                     <span id="paginationInfo">Showing 0-0 of 0 entries</span>
-                    <div class="flex gap-2">
-                        <button id="prevPageBtn" class="px-3 py-1 bg-slate-100 hover:bg-slate-200 rounded-lg font-semibold disabled:opacity-50" disabled>Previous</button>
-                        <button id="nextPageBtn" class="px-3 py-1 bg-slate-100 hover:bg-slate-200 rounded-lg font-semibold disabled:opacity-50" disabled>Next</button>
+                    <div class="flex gap-2 w-full sm:w-auto justify-between sm:justify-end">
+                        <button id="prevPageBtn" class="px-3 py-1 bg-slate-100 hover:bg-slate-200 rounded-lg font-semibold disabled:opacity-50 flex-1 sm:flex-initial text-center" disabled>Previous</button>
+                        <button id="nextPageBtn" class="px-3 py-1 bg-slate-100 hover:bg-slate-200 rounded-lg font-semibold disabled:opacity-50 flex-1 sm:flex-initial text-center" disabled>Next</button>
                     </div>
                 </div>
 
@@ -185,7 +189,7 @@
 
     </main>
 
-    <footer class="bg-white border-t py-3 text-center text-base text-slate-400">
+    <footer class="bg-white border-t py-3 text-center text-base text-slate-400 px-4">
         GitHub Pages Frontend Connected to Apps Script
     </footer>
 
@@ -331,8 +335,8 @@
                 tr.innerHTML = `
                     <td class="p-3 text-center"><input type="checkbox" class="row-select" data-folder-id="${row.folderId}"></td>
                     <td class="p-3 text-slate-500">${actualIndex}</td>
-                    <td class="p-3 text-slate-800">${row.workName}</td>
-                    <td class="p-3 text-slate-600">${row.entryDate}</td>
+                    <td class="p-3 text-slate-800 break-words">${row.workName}</td>
+                    <td class="p-3 text-slate-600 whitespace-nowrap">${row.entryDate}</td>
                     <td class="p-3 text-center">
                         <div class="flex items-center justify-center gap-2">
                             <!-- Open Folder Icon -->
@@ -587,3 +591,4 @@
     </script>
 </body>
 </html>
+
