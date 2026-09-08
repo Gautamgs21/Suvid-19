@@ -8,8 +8,8 @@
     <style>
         body {
             font-family: 'Aptos Display', 'Segoe UI', sans-serif;
-            font-weight: 600; /* Semi-Bold */
-            font-size: 28px; /* Increased by 2 additional points */
+            font-weight: 600;
+            font-size: 22px;
         }
         input, textarea, button, table {
             font-weight: 400;
@@ -66,7 +66,7 @@
                         <textarea id="workRemarks" rows="3" placeholder="Enter remarks details..." 
                             class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg resize-none"></textarea>
                     </div>
-                    <button type="submit" 
+                    <button type="submit" id="submitBtn"
                         class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-lg transition text-lg shadow-sm font-semibold">
                         Create New Entry
                     </button>
@@ -78,19 +78,14 @@
                 <h2 class="text-xl text-slate-700 border-b pb-3 mb-4">Settings</h2>
                 <div class="space-y-3 text-lg">
                     <div>
-                        <label class="block text-base uppercase text-slate-500 mb-1">Change Default Work Folder Path</label>
+                        <label class="block text-base uppercase text-slate-500 mb-1">Change Default Work Folder Path / ID</label>
                         <div class="flex gap-2">
-                            <input type="text" id="defaultFolderInput" value="D:\01. My Work\03. Daily Work" 
+                            <input type="text" id="defaultFolderInput" value="root" 
                                 class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg">
                             <button type="button" id="saveFolderBtn" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-base font-semibold transition shrink-0">
                                 Save
                             </button>
                         </div>
-                    </div>
-                    <div>
-                        <label class="block text-base uppercase text-slate-500 mb-1">Google Apps Script Web App URL</label>
-                        <input type="text" id="scriptUrl" placeholder="https://script.google.com/macros/s/AKfycbxUvgiK-Iih8Vgh5F8-e7HiXAJHszCzFDNzwS9xMH9tS0EJBh4hJVH99jpsyajPUJZc/exec" 
-                            class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg">
                     </div>
                 </div>
             </div>
@@ -135,24 +130,7 @@
                             </tr>
                         </thead>
                         <tbody id="workTableBody" class="divide-y divide-slate-200 text-lg">
-                            <tr class="hover:bg-slate-50">
-                                <td class="p-3 text-center"><input type="checkbox" class="row-select"></td>
-                                <td class="p-3 text-slate-500">1</td>
-                                <td class="p-3 text-slate-800">SUC Assessment - Bharti Airtel (2020-21)</td>
-                                <td class="p-3 text-slate-600">08-09-2026</td>
-                                <td class="p-3 text-center">
-                                    <a href="#" target="_blank" class="text-blue-600 hover:underline text-base font-semibold">Open Folder</a>
-                                </td>
-                            </tr>
-                            <tr class="hover:bg-slate-50">
-                                <td class="p-3 text-center"><input type="checkbox" class="row-select"></td>
-                                <td class="p-3 text-slate-500">2</td>
-                                <td class="p-3 text-slate-800">Verification of Deduction Claims - R.Comm</td>
-                                <td class="p-3 text-slate-600">13-08-2026</td>
-                                <td class="p-3 text-center">
-                                    <a href="#" target="_blank" class="text-blue-600 hover:underline text-base font-semibold">Open Folder</a>
-                                </td>
-                            </tr>
+                            <!-- Dynamic rows will be loaded here -->
                         </tbody>
                     </table>
                 </div>
@@ -163,10 +141,13 @@
     </main>
 
     <footer class="bg-white border-t py-3 text-center text-base text-slate-400">
-        GitHub Pages Frontend Prototype
+        GitHub Pages Frontend Connected to Apps Script
     </footer>
 
     <script>
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxUvgiK-Iih8Vgh5F8-e7HiXAJHszCzFDNzwS9xMH9tS0EJBh4hJVH99jpsyajPUJZc/exec";
+
+        // Filter functionality
         const filterFunction = (e) => {
             const term = e.target.value.toLowerCase();
             const rows = document.querySelectorAll('#workTableBody tr');
@@ -184,8 +165,85 @@
 
         document.getElementById('saveFolderBtn').addEventListener('click', function() {
             const path = document.getElementById('defaultFolderInput').value;
-            alert('Default folder updated to: ' + path);
+            alert('Default Folder ID updated locally to: ' + path);
         });
+
+        // Fetch data on load and refresh
+        function loadTableData() {
+            const tbody = document.getElementById('workTableBody');
+            tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-500">Loading entries...</td></tr>`;
+
+            fetch(SCRIPT_URL)
+                .then(response => response.json())
+                .then(data => {
+                    tbody.innerHTML = '';
+                    if (data.length === 0) {
+                        tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-500">No entries found.</td></tr>`;
+                        return;
+                    }
+
+                    data.forEach((row, index) => {
+                        const tr = document.createElement('tr');
+                        tr.className = 'hover:bg-slate-50';
+                        tr.innerHTML = `
+                            <td class="p-3 text-center"><input type="checkbox" class="row-select"></td>
+                            <td class="p-3 text-slate-500">${index + 1}</td>
+                            <td class="p-3 text-slate-800">${row.workName}</td>
+                            <td class="p-3 text-slate-600">${row.entryDate}</td>
+                            <td class="p-3 text-center">
+                                <a href="${row.folderUrl}" target="_blank" class="text-blue-600 hover:underline text-base font-semibold">Open Folder</a>
+                            </td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error fetching data:', error);
+                    tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-red-500">Failed to load entries.</td></tr>`;
+                });
+        }
+
+        document.getElementById('refreshBtn').addEventListener('click', loadTableData);
+
+        // Handle Form Submission
+        document.getElementById('workForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Creating...';
+
+            const payload = {
+                entryDate: document.getElementById('entryDate').value,
+                workName: document.getElementById('workName').value,
+                remarks: document.getElementById('workRemarks').value,
+                defaultFolderId: document.getElementById('defaultFolderInput').value
+            };
+
+            fetch(SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(() => {
+                alert('Entry Created Successfully!');
+                document.getElementById('workForm').reset();
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Create New Entry';
+                loadTableData();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error creating entry.');
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Create New Entry';
+            });
+        });
+
+        // Load data automatically when page opens
+        window.onload = loadTableData;
     </script>
 </body>
 </html>
