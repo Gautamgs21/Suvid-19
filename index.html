@@ -7,9 +7,9 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
-            font-family: 'Aptos Serif', 'Segoe UI', serif;
+            font-family: 'Aptos Display', 'Segoe UI', sans-serif;
             font-weight: 600;
-            font-size: 25px;
+            font-size: 22px;
         }
         input, textarea, button, table {
             font-weight: 400;
@@ -17,9 +17,28 @@
         label, h1, h2, th {
             font-weight: 600;
         }
+        /* Toast Animation */
+        #toastContainer {
+            transition: all 0.3s ease-in-out;
+        }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col relative">
+
+    <!-- Toast Notification Container -->
+    <div id="toastContainer" class="fixed top-5 right-5 z-50 flex flex-col gap-3 pointer-events-none"></div>
+
+    <!-- Custom Confirmation Modal -->
+    <div id="confirmModal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-xl max-w-md w-full p-6 space-y-4">
+            <h3 class="text-xl font-bold text-slate-800" id="modalTitle">Confirm Action</h3>
+            <p class="text-base text-slate-600" id="modalMessage">Are you sure you want to proceed?</p>
+            <div class="flex justify-end gap-3 pt-2">
+                <button id="modalCancelBtn" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-base font-semibold transition">Cancel</button>
+                <button id="modalConfirmBtn" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-base font-semibold transition">Confirm</button>
+            </div>
+        </div>
+    </div>
 
     <!-- Header -->
     <header class="bg-blue-600 text-white shadow-md">
@@ -140,6 +159,52 @@
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxUvgiK-Iih8Vgh5F8-e7HiXAJHszCzFDNzwS9xMH9tS0EJBh4hJVH99jpsyajPUJZc/exec";
         const DEFAULT_FOLDER_ID = "1vmeGBBB1qEdHqdPxMU4OHMEIJbsKIzRt";
 
+        // Modern Toast Notification Function
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            
+            let bgClass = type === 'success' ? 'bg-emerald-600' : 'bg-red-600';
+            toast.className = `${bgClass} text-white px-5 py-3 rounded-xl shadow-lg pointer-events-auto flex items-center justify-between gap-4 text-base transition-all duration-300 opacity-0 translate-y-2`;
+            toast.innerHTML = `<span>${message}</span>`;
+            
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.classList.remove('opacity-0', 'translate-y-2');
+            }, 10);
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
+
+        // Custom Modal Confirmation Helper
+        function showConfirmModal(title, message, onConfirm) {
+            const modal = document.getElementById('confirmModal');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalMessage = document.getElementById('modalMessage');
+            const confirmBtn = document.getElementById('modalConfirmBtn');
+            const cancelBtn = document.getElementById('modalCancelBtn');
+
+            modalTitle.textContent = title;
+            modalMessage.textContent = message;
+            modal.classList.remove('hidden');
+
+            const cleanUp = () => {
+                modal.classList.add('hidden');
+                confirmBtn.replaceWith(confirmBtn.cloneNode(true));
+                cancelBtn.replaceWith(cancelBtn.cloneNode(true));
+            };
+
+            document.getElementById('modalConfirmBtn').addEventListener('click', () => {
+                cleanUp();
+                onConfirm();
+            });
+
+            document.getElementById('modalCancelBtn').addEventListener('click', cleanUp);
+        }
+
         // Filter functionality
         const filterFunction = (e) => {
             const term = e.target.value.toLowerCase();
@@ -203,50 +268,51 @@
 
         document.getElementById('refreshBtn').addEventListener('click', window.loadTableData);
 
-        // Delete Selected Folders via JSONP
+        // Delete Selected Folders via Custom Modal & Toast
         document.getElementById('deleteBtn').addEventListener('click', function() {
             const selectedCheckboxes = document.querySelectorAll('.row-select:checked');
             if (selectedCheckboxes.length === 0) {
-                alert('Please select at least one entry to delete.');
+                showToast('Please select at least one entry to delete.', 'error');
                 return;
             }
 
-            if (!confirm(`Are you sure you want to delete ${selectedCheckboxes.length} selected folder(s)?`)) {
-                return;
-            }
+            showConfirmModal(
+                'Delete Entries',
+                `Are you sure you want to delete ${selectedCheckboxes.length} selected folder(s)?`,
+                () => {
+                    const deleteBtn = document.getElementById('deleteBtn');
+                    deleteBtn.disabled = true;
+                    deleteBtn.textContent = 'Deleting...';
 
-            const deleteBtn = document.getElementById('deleteBtn');
-            deleteBtn.disabled = true;
-            deleteBtn.textContent = 'Deleting...';
+                    let folderIds = Array.from(selectedCheckboxes).map(cb => cb.getAttribute('data-folder-id'));
+                    
+                    let index = 0;
+                    function deleteNext() {
+                        if (index >= folderIds.length) {
+                            showToast('Selected folders deleted successfully!', 'success');
+                            deleteBtn.disabled = false;
+                            deleteBtn.textContent = 'Delete Selected';
+                            document.getElementById('selectAll').checked = false;
+                            setTimeout(window.loadTableData, 1000);
+                            return;
+                        }
 
-            let folderIds = Array.from(selectedCheckboxes).map(cb => cb.getAttribute('data-folder-id'));
-            
-            // Delete sequentially using JSONP script calls
-            let index = 0;
-            function deleteNext() {
-                if (index >= folderIds.length) {
-                    alert('Selected folders deleted successfully!');
-                    deleteBtn.disabled = false;
-                    deleteBtn.textContent = 'Delete Selected';
-                    document.getElementById('selectAll').checked = false;
-                    setTimeout(window.loadTableData, 1000);
-                    return;
+                        let currentId = folderIds[index++];
+                        let delScript = document.createElement('script');
+                        delScript.src = `${SCRIPT_URL}?action=delete&folderId=${currentId}&callback=deleteDone`;
+                        document.body.appendChild(delScript);
+                    }
+
+                    window.deleteDone = function(res) {
+                        deleteNext();
+                    };
+
+                    deleteNext();
                 }
-
-                let currentId = folderIds[index++];
-                let delScript = document.createElement('script');
-                delScript.src = `${SCRIPT_URL}?action=delete&folderId=${currentId}&callback=deleteDone`;
-                document.body.appendChild(delScript);
-            }
-
-            window.deleteDone = function(res) {
-                deleteNext();
-            };
-
-            deleteNext();
+            );
         });
 
-        // Handle Form Submission
+        // Handle Form Submission with Toasts
         document.getElementById('workForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const submitBtn = document.getElementById('submitBtn');
@@ -269,7 +335,7 @@
                 body: JSON.stringify(payload)
             })
             .then(() => {
-                alert('Entry Created Successfully!');
+                showToast('Entry Created Successfully!', 'success');
                 document.getElementById('workForm').reset();
                 submitBtn.disabled = false;
                 submitBtn.textContent = 'Create New Entry';
@@ -277,7 +343,7 @@
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('Error creating entry.');
+                showToast('Error creating entry.', 'error');
                 submitBtn.disabled = false;
                 submitBtn.textContent = 'Create New Entry';
             });
