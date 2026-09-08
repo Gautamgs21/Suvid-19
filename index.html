@@ -7,9 +7,9 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
-            font-family: 'Aptos Display', 'Segoe UI', sans-serif;
+            font-family: 'Aptos Serif', 'Segoe UI', serif;
             font-weight: 600;
-            font-size: 22px;
+            font-size: 25px;
         }
         input, textarea, button, table {
             font-weight: 400;
@@ -19,13 +19,6 @@
         }
         #toastContainer {
             transition: all 0.3s ease-in-out;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        .spinner {
-            animation: spin 1s linear infinite;
         }
     </style>
 </head>
@@ -42,6 +35,18 @@
             <div class="flex justify-end gap-3 pt-2">
                 <button id="modalCancelBtn" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-base font-semibold transition">Cancel</button>
                 <button id="modalConfirmBtn" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-base font-semibold transition">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Input Prompt Modal for Renaming -->
+    <div id="promptModal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-xl max-w-md w-full p-6 space-y-4">
+            <h3 class="text-xl font-bold text-slate-800" id="promptTitle">Edit Folder Name</h3>
+            <input type="text" id="promptInput" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg">
+            <div class="flex justify-end gap-3 pt-2">
+                <button id="promptCancelBtn" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-base font-semibold transition">Cancel</button>
+                <button id="promptConfirmBtn" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-base font-semibold transition">Save</button>
             </div>
         </div>
     </div>
@@ -119,10 +124,16 @@
 
                 <!-- Table Container -->
                 <div class="overflow-x-auto flex-grow mt-4 relative min-h-[300px]">
-                    <!-- Clean Professional Spinner Loading Overlay -->
-                    <div id="loadingOverlay" class="absolute inset-0 bg-white/90 backdrop-blur-sm z-20 flex flex-col items-center justify-center gap-3 transition-opacity duration-300">
-                        <div class="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full spinner"></div>
-                        <span id="loadingStatusText" class="text-base font-semibold text-slate-600">Scanning Google Drive Folders...</span>
+                    <!-- Circular Loading Overlay with Real Percentage Counter -->
+                    <div id="loadingOverlay" class="absolute inset-0 bg-white/95 backdrop-blur-sm z-20 flex flex-col items-center justify-center gap-3 transition-opacity duration-300">
+                        <div class="relative flex items-center justify-center">
+                            <svg class="w-24 h-24 transform -rotate-90">
+                                <circle cx="48" cy="48" r="40" stroke="currentColor" stroke-width="6" class="text-slate-200" fill="transparent"></circle>
+                                <circle id="loadingCircle" cx="48" cy="48" r="40" stroke="currentColor" stroke-width="6" class="text-blue-600 transition-all duration-300" fill="transparent" stroke-dasharray="251.2" stroke-dashoffset="251.2"></circle>
+                            </svg>
+                            <span id="loadingPercentage" class="absolute text-base font-bold text-slate-700">0%</span>
+                        </div>
+                        <span id="loadingStatusText" class="text-base font-semibold text-slate-600">Connecting to Google Drive...</span>
                     </div>
 
                     <table class="w-full text-left border-collapse">
@@ -132,7 +143,7 @@
                                 <th class="p-3 w-16">Sl No</th>
                                 <th class="p-3">Name of the Work</th>
                                 <th class="p-3 w-40">Date of Entry</th>
-                                <th class="p-3 w-36 text-center">Action</th>
+                                <th class="p-3 w-44 text-center">Action</th>
                             </tr>
                         </thead>
                         <tbody id="workTableBody" class="divide-y divide-slate-200 text-lg">
@@ -170,7 +181,7 @@
             }, 3500);
         }
 
-        // Custom Modal Confirmation System
+        // Custom Confirmation Modal
         function showConfirmModal(title, message, onConfirm) {
             const modal = document.getElementById('confirmModal');
             document.getElementById('modalTitle').textContent = title;
@@ -193,23 +204,84 @@
             document.getElementById('modalCancelBtn').addEventListener('click', cleanUp);
         }
 
-        // Loading Overlay Controllers
-        function showLoading(text) {
-            const overlay = document.getElementById('loadingOverlay');
-            document.getElementById('loadingStatusText').textContent = text;
-            overlay.classList.remove('hidden', 'opacity-0');
+        // Custom Prompt Modal for Renaming/Editing
+        function showPromptModal(title, defaultValue, onSave) {
+            const modal = document.getElementById('promptModal');
+            document.getElementById('promptTitle').textContent = title;
+            const input = document.getElementById('promptInput');
+            input.value = defaultValue;
+            modal.classList.remove('hidden');
+            input.focus();
+
+            const confirmBtn = document.getElementById('promptConfirmBtn');
+            const cancelBtn = document.getElementById('promptCancelBtn');
+
+            const cleanUp = () => {
+                modal.classList.add('hidden');
+                confirmBtn.replaceWith(confirmBtn.cloneNode(true));
+                cancelBtn.replaceWith(cancelBtn.cloneNode(true));
+            };
+
+            document.getElementById('promptConfirmBtn').addEventListener('click', () => {
+                const val = input.value.trim();
+                cleanUp();
+                if (val) onSave(val);
+            });
+            document.getElementById('promptCancelBtn').addEventListener('click', cleanUp);
         }
 
-        function hideLoading(onComplete) {
+        // Smooth Percentage Progress Animation
+        let progressInterval = null;
+        function startRealLoading(statusMessage) {
             const overlay = document.getElementById('loadingOverlay');
-            overlay.classList.add('opacity-0');
+            const circle = document.getElementById('loadingCircle');
+            const percentageText = document.getElementById('loadingPercentage');
+            const statusText = document.getElementById('loadingStatusText');
+            
+            overlay.classList.remove('hidden', 'opacity-0');
+            statusText.textContent = statusMessage;
+            
+            let currentPercent = 10;
+            const circumference = 251.2; // 2 * pi * 40
+
+            circle.style.strokeDashoffset = circumference - (currentPercent / 100) * circumference;
+            percentageText.textContent = currentPercent + '%';
+
+            if (progressInterval) clearInterval(progressInterval);
+            progressInterval = setInterval(() => {
+                if (currentPercent < 92) {
+                    currentPercent += Math.floor(Math.random() * 8) + 3;
+                    if (currentPercent > 92) currentPercent = 92;
+                    let offset = circumference - (currentPercent / 100) * circumference;
+                    circle.style.strokeDashoffset = offset;
+                    percentageText.textContent = currentPercent + '%';
+                }
+            }, 250);
+        }
+
+        function stopRealLoading(onComplete) {
+            if (progressInterval) clearInterval(progressInterval);
+            const overlay = document.getElementById('loadingOverlay');
+            const circle = document.getElementById('loadingCircle');
+            const percentageText = document.getElementById('loadingPercentage');
+            const statusText = document.getElementById('loadingStatusText');
+            const circumference = 251.2;
+
+            let offset = circumference - (100 / 100) * circumference;
+            circle.style.strokeDashoffset = offset;
+            percentageText.textContent = '100%';
+            statusText.textContent = 'Complete!';
+
             setTimeout(() => {
-                overlay.classList.add('hidden');
-                if (onComplete) onComplete();
+                overlay.classList.add('opacity-0');
+                setTimeout(() => {
+                    overlay.classList.add('hidden');
+                    if (onComplete) onComplete();
+                }, 300);
             }, 300);
         }
 
-        // Filter functionality for the table search box
+        // Filter functionality for table search box
         document.getElementById('tableSearchInput').addEventListener('input', function(e) {
             const term = e.target.value.toLowerCase();
             const rows = document.querySelectorAll('#workTableBody tr');
@@ -225,9 +297,9 @@
             checkboxes.forEach(cb => cb.checked = this.checked);
         });
 
-        // Load table data using JSONP with spinner overlay
+        // Load table data using JSONP
         window.loadTableData = function() {
-            showLoading('Scanning Google Drive Folders...');
+            startRealLoading('Scanning Google Drive Folders...');
 
             const oldScript = document.getElementById('jsonpScript');
             if (oldScript) oldScript.remove();
@@ -239,7 +311,7 @@
         };
 
         window.handleTableData = function(data) {
-            hideLoading(() => {
+            stopRealLoading(() => {
                 const tbody = document.getElementById('workTableBody');
                 tbody.innerHTML = '';
                 
@@ -264,7 +336,24 @@
                         <td class="p-3 text-slate-800">${row.workName}</td>
                         <td class="p-3 text-slate-600">${row.entryDate}</td>
                         <td class="p-3 text-center">
-                            <a href="${row.folderUrl}" target="_blank" class="text-blue-600 hover:underline text-base font-semibold">Open Folder</a>
+                            <div class="flex items-center justify-center gap-2">
+                                <!-- Open Folder Icon -->
+                                <a href="${row.folderUrl}" target="_blank" title="Open Folder" class="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                                </a>
+                                <!-- Download Folder Icon (Opens folder storage view for downloading) -->
+                                <a href="${row.folderUrl}" target="_blank" title="Download Folder" class="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-lg transition">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                                </a>
+                                <!-- Edit/Rename Folder Icon -->
+                                <button onclick="editFolder('${row.folderId}', '${row.workName.replace(/'/g, "\\'")}')" title="Rename Folder" class="p-1.5 text-amber-600 hover:bg-amber-50 rounded-lg transition">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                </button>
+                                <!-- Delete Folder Icon -->
+                                <button onclick="deleteSingleFolder('${row.folderId}')" title="Delete Folder" class="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                </button>
+                            </div>
                         </td>
                     `;
                     tbody.appendChild(tr);
@@ -272,9 +361,43 @@
             });
         };
 
+        // Edit / Rename Folder Action Handler
+        window.editFolder = function(folderId, currentName) {
+            showPromptModal('Rename Work Folder', currentName, (newName) => {
+                startRealLoading('Renaming folder...');
+                const renameScript = document.createElement('script');
+                renameScript.src = `${SCRIPT_URL}?action=rename&folderId=${folderId}&newName=${encodeURIComponent(newName)}&callback=renameDone`;
+                document.body.appendChild(renameScript);
+            });
+        };
+
+        window.renameDone = function(res) {
+            stopRealLoading(() => {
+                showToast('Folder renamed successfully!', 'success');
+                setTimeout(window.loadTableData, 500);
+            });
+        };
+
+        // Delete Single Folder Action Handler
+        window.deleteSingleFolder = function(folderId) {
+            showConfirmModal('Delete Entry', 'Are you sure you want to delete this folder?', () => {
+                startRealLoading('Deleting folder...');
+                const delScript = document.createElement('script');
+                delScript.src = `${SCRIPT_URL}?action=delete&folderId=${folderId}&callback=singleDeleteDone`;
+                document.body.appendChild(delScript);
+            });
+        };
+
+        window.singleDeleteDone = function(res) {
+            stopRealLoading(() => {
+                showToast('Folder deleted successfully!', 'success');
+                setTimeout(window.loadTableData, 500);
+            });
+        };
+
         document.getElementById('refreshBtn').addEventListener('click', window.loadTableData);
 
-        // Delete Selected Folders via Web App Modal & Toast
+        // Delete Selected Folders Handler
         document.getElementById('deleteBtn').addEventListener('click', function() {
             const selectedCheckboxes = document.querySelectorAll('.row-select:checked');
             if (selectedCheckboxes.length === 0) {
@@ -286,13 +409,13 @@
                 'Delete Entries',
                 `Are you sure you want to delete ${selectedCheckboxes.length} selected folder(s)?`,
                 () => {
-                    showLoading('Deleting selected folders...');
+                    startRealLoading('Deleting selected folders...');
                     let folderIds = Array.from(selectedCheckboxes).map(cb => cb.getAttribute('data-folder-id'));
                     
                     let index = 0;
                     function deleteNext() {
                         if (index >= folderIds.length) {
-                            hideLoading(() => {
+                            stopRealLoading(() => {
                                 showToast('Selected folders deleted successfully!', 'success');
                                 document.getElementById('selectAll').checked = false;
                                 setTimeout(window.loadTableData, 500);
@@ -315,14 +438,14 @@
             );
         });
 
-        // Handle Form Submission with Spinner State
+        // Handle Form Submission
         document.getElementById('workForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const submitBtn = document.getElementById('submitBtn');
             submitBtn.disabled = true;
             submitBtn.textContent = 'Creating...';
 
-            showLoading('Creating Drive Folder & Remarks...');
+            startRealLoading('Creating Drive Folder & Remarks...');
 
             const payload = {
                 entryDate: document.getElementById('entryDate').value,
@@ -340,7 +463,7 @@
                 body: JSON.stringify(payload)
             })
             .then(() => {
-                hideLoading(() => {
+                stopRealLoading(() => {
                     showToast('Entry Created Successfully!', 'success');
                     document.getElementById('workForm').reset();
                     submitBtn.disabled = false;
@@ -350,7 +473,7 @@
             })
             .catch(error => {
                 console.error('Error:', error);
-                hideLoading(() => {
+                stopRealLoading(() => {
                     showToast('Error creating entry.', 'error');
                     submitBtn.disabled = false;
                     submitBtn.textContent = 'Create New Entry';
