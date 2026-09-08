@@ -17,7 +17,6 @@
         label, h1, h2, th {
             font-weight: 600;
         }
-        /* Toast Animation */
         #toastContainer {
             transition: all 0.3s ease-in-out;
         }
@@ -28,7 +27,7 @@
     <!-- Toast Notification Container -->
     <div id="toastContainer" class="fixed top-5 right-5 z-50 flex flex-col gap-3 pointer-events-none"></div>
 
-    <!-- Custom Confirmation Modal -->
+    <!-- Custom Web App Confirmation Modal -->
     <div id="confirmModal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-xl shadow-xl max-w-md w-full p-6 space-y-4">
             <h3 class="text-xl font-bold text-slate-800" id="modalTitle">Confirm Action</h3>
@@ -159,7 +158,7 @@
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxUvgiK-Iih8Vgh5F8-e7HiXAJHszCzFDNzwS9xMH9tS0EJBh4hJVH99jpsyajPUJZc/exec";
         const DEFAULT_FOLDER_ID = "1vmeGBBB1qEdHqdPxMU4OHMEIJbsKIzRt";
 
-        // Modern Toast Notification Function
+        // Web App Toast Notification System
         function showToast(message, type = 'success') {
             const container = document.getElementById('toastContainer');
             const toast = document.createElement('div');
@@ -179,7 +178,7 @@
             }, 3500);
         }
 
-        // Custom Modal Confirmation Helper
+        // Web App Custom Modal Confirmation System
         function showConfirmModal(title, message, onConfirm) {
             const modal = document.getElementById('confirmModal');
             const modalTitle = document.getElementById('modalTitle');
@@ -268,7 +267,7 @@
 
         document.getElementById('refreshBtn').addEventListener('click', window.loadTableData);
 
-        // Delete Selected Folders via Custom Modal & Toast
+        // Delete Selected Folders via Web App Modal & Toast
         document.getElementById('deleteBtn').addEventListener('click', function() {
             const selectedCheckboxes = document.querySelectorAll('.row-select:checked');
             if (selectedCheckboxes.length === 0) {
@@ -312,7 +311,7 @@
             );
         });
 
-        // Handle Form Submission with Toasts
+        // Handle Form Submission with Web App Toasts
         document.getElementById('workForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const submitBtn = document.getElementById('submitBtn');
