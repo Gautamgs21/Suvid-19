@@ -1,4 +1,150 @@
-<script>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Work Folder Management System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Aptos Display', 'Segoe UI', sans-serif;
+            font-weight: 600;
+            font-size: 22px;
+        }
+        input, textarea, button, table {
+            font-weight: 400;
+        }
+        label, h1, h2, th {
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
+
+    <!-- Header -->
+    <header class="bg-blue-600 text-white shadow-md">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <h1 class="text-3xl tracking-wide">Work Folder Management System</h1>
+            <!-- Global Search Bar -->
+            <div class="relative w-full sm:w-80">
+                <input type="text" id="globalSearchInput" placeholder="Search works or dates..." 
+                    class="w-full pl-10 pr-4 py-2 rounded-lg text-slate-800 bg-white/90 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-400 text-lg">
+                <svg class="w-5 h-5 text-slate-400 absolute left-3 top-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                </svg>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-7xl mx-auto px-4 py-6 flex-grow grid grid-cols-1 lg:grid-cols-3 gap-6 w-full">
+        
+        <!-- Left Column: Create Work Form & Settings -->
+        <div class="lg:col-span-1 flex flex-col gap-6">
+            
+            <!-- Create Work Card -->
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                <h2 class="text-xl text-slate-700 border-b pb-3 mb-4 flex items-center gap-2">
+                    <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                    </svg>
+                    Create Work Entry
+                </h2>
+                <form id="workForm" class="space-y-4">
+                    <div>
+                        <label class="block text-base uppercase text-slate-500 mb-1">Date of Entry</label>
+                        <input type="date" id="entryDate" required 
+                            class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg">
+                    </div>
+                    <div>
+                        <label class="block text-base uppercase text-slate-500 mb-1">Name of the Folder / Work</label>
+                        <input type="text" id="workName" placeholder="e.g., SUC Assessment - Bharti Airtel" required 
+                            class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg">
+                    </div>
+                    <div>
+                        <label class="block text-base uppercase text-slate-500 mb-1">Remarks</label>
+                        <textarea id="workRemarks" rows="3" placeholder="Enter remarks details..." 
+                            class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg resize-none"></textarea>
+                    </div>
+                    <button type="submit" id="submitBtn"
+                        class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-lg transition text-lg shadow-sm font-semibold">
+                        Create New Entry
+                    </button>
+                </form>
+            </div>
+
+            <!-- Settings Card -->
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                <h2 class="text-xl text-slate-700 border-b pb-3 mb-4">Settings</h2>
+                <div class="space-y-3 text-lg">
+                    <div>
+                        <label class="block text-base uppercase text-slate-500 mb-1">Change Default Work Folder Path / ID</label>
+                        <div class="flex gap-2">
+                            <input type="text" id="defaultFolderInput" value="root" 
+                                class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg">
+                            <button type="button" id="saveFolderBtn" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-base font-semibold transition shrink-0">
+                                Save
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Right Column: Details of Works Table -->
+        <div class="lg:col-span-2 flex flex-col gap-4">
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex-grow flex flex-col">
+                
+                <div class="flex flex-col sm:flex-row justify-between items-center pb-4 border-b gap-4">
+                    <h2 class="text-xl text-slate-700">Details of Works</h2>
+                    
+                    <!-- Action Bar with Table Search Box right before Refresh -->
+                    <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
+                        <div class="relative">
+                            <input type="text" id="tableSearchInput" placeholder="Filter table results..." 
+                                class="pl-8 pr-3 py-1.5 border border-slate-300 rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-blue-500 w-52 sm:w-64">
+                            <svg class="w-5 h-5 text-slate-400 absolute left-2.5 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                            </svg>
+                        </div>
+                        <button id="refreshBtn" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-base font-semibold transition shrink-0">
+                            Refresh
+                        </button>
+                        <button id="deleteBtn" class="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg text-base font-semibold transition shrink-0">
+                            Delete Selected
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Table Container -->
+                <div class="overflow-x-auto flex-grow mt-4">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-100 text-slate-600 text-base uppercase tracking-wider">
+                                <th class="p-3 w-10 text-center"><input type="checkbox" id="selectAll" class="rounded"></th>
+                                <th class="p-3 w-16">Sl No</th>
+                                <th class="p-3">Name of the Work</th>
+                                <th class="p-3 w-40">Date of Entry</th>
+                                <th class="p-3 w-36 text-center">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="workTableBody" class="divide-y divide-slate-200 text-lg">
+                            <!-- Dynamic rows will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+        </div>
+
+    </main>
+
+    <footer class="bg-white border-t py-3 text-center text-base text-slate-400">
+        GitHub Pages Frontend Connected to Apps Script
+    </footer>
+
+    <script>
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxUvgiK-Iih8Vgh5F8-e7HiXAJHszCzFDNzwS9xMH9tS0EJBh4hJVH99jpsyajPUJZc/exec";
 
         // Filter functionality
@@ -27,7 +173,6 @@
             const tbody = document.getElementById('workTableBody');
             tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-500">Loading entries...</td></tr>`;
 
-            // Remove previous JSONP script tags if any exist
             const oldScript = document.getElementById('jsonpScript');
             if (oldScript) oldScript.remove();
 
@@ -92,7 +237,7 @@
                 document.getElementById('workForm').reset();
                 submitBtn.disabled = false;
                 submitBtn.textContent = 'Create New Entry';
-                setTimeout(window.loadTableData, 1500); // Wait 1.5s for Google Drive to finish creating folder before refreshing
+                setTimeout(window.loadTableData, 1500);
             })
             .catch(error => {
                 console.error('Error:', error);
@@ -105,3 +250,5 @@
         // Load data automatically when page opens
         window.onload = window.loadTableData;
     </script>
+</body>
+</html>
