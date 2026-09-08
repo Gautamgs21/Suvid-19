@@ -338,9 +338,6 @@
                 });
 
                 data.forEach((row, index) => {
-                    // Google Drive download export link format for folders/files
-                    const downloadUrl = `https://drive.google.com/drive/folders/${row.folderId}`;
-
                     const tr = document.createElement('tr');
                     tr.className = 'hover:bg-slate-50';
                     tr.innerHTML = `
@@ -354,10 +351,10 @@
                                 <a href="${row.folderUrl}" target="_blank" title="Open Folder in Drive" class="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
                                 </a>
-                                <!-- Download Folder Icon (Directs to Google Drive folder storage manager view) -->
-                                <a href="${downloadUrl}" target="_blank" title="Manage / Download Folder Files" class="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-lg transition">
+                                <!-- Download Folder as ZIP -->
+                                <button onclick="downloadFolder('${row.folderId}', '${row.workName.replace(/'/g, "\\'")}')" title="Download Folder as ZIP" class="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-lg transition">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-                                </a>
+                                </button>
                                 <!-- Edit/Rename Folder Icon -->
                                 <button onclick="editFolder('${row.folderId}', '${row.workName.replace(/'/g, "\\'")}')" title="Rename Folder" class="p-1.5 text-amber-600 hover:bg-amber-50 rounded-lg transition">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
@@ -405,6 +402,35 @@
             stopLoading(() => {
                 showToast('Folder deleted successfully!', 'success');
                 setTimeout(window.loadTableData, 500);
+            });
+        };
+
+        // Download Folder as ZIP Handler
+        window.downloadFolder = function(folderId, workName) {
+            startLoading('Zipping folder contents...');
+            const oldZipScript = document.getElementById('zipDownloadScript');
+            if (oldZipScript) oldZipScript.remove();
+
+            const zipScript = document.createElement('script');
+            zipScript.id = 'zipDownloadScript';
+            zipScript.src = `${SCRIPT_URL}?action=downloadZip&folderId=${folderId}&callback=handleDownloadZip`;
+            document.body.appendChild(zipScript);
+        };
+
+        window.handleDownloadZip = function(res) {
+            stopLoading(() => {
+                if (res && res.zipUrl) {
+                    const a = document.createElement('a');
+                    a.href = res.zipUrl;
+                    a.target = '_blank';
+                    a.rel = 'noopener';
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                    showToast('Download starting...', 'success');
+                } else {
+                    showToast((res && res.error) || 'Could not prepare the ZIP download.', 'error');
+                }
             });
         };
 
