@@ -7,9 +7,9 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
-            font-family: 'Aptos Display', 'Segoe UI', sans-serif;
+            font-family: 'Aptos Serif', 'Segoe UI', serif;
             font-weight: 600;
-            font-size: 22px;
+            font-size: 25px;
         }
         input, textarea, button, table {
             font-weight: 400;
@@ -39,25 +39,17 @@
         </div>
     </div>
 
-    <!-- Header -->
+    <!-- Header (Title bar search removed) -->
     <header class="bg-blue-600 text-white shadow-md">
-        <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
             <h1 class="text-3xl tracking-wide">Work Folder Management System</h1>
-            <!-- Global Search Bar -->
-            <div class="relative w-full sm:w-80">
-                <input type="text" id="globalSearchInput" placeholder="Search works or dates..." 
-                    class="w-full pl-10 pr-4 py-2 rounded-lg text-slate-800 bg-white/90 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-400 text-lg">
-                <svg class="w-5 h-5 text-slate-400 absolute left-3 top-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                </svg>
-            </div>
         </div>
     </header>
 
     <!-- Main Container -->
     <main class="max-w-7xl mx-auto px-4 py-6 flex-grow grid grid-cols-1 lg:grid-cols-3 gap-6 w-full">
         
-        <!-- Left Column: Create Work Form & Settings -->
+        <!-- Left Column: Create Work Form Only (Settings Removed) -->
         <div class="lg:col-span-1 flex flex-col gap-6">
             
             <!-- Create Work Card -->
@@ -91,15 +83,6 @@
                 </form>
             </div>
 
-            <!-- Settings Card -->
-            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                <h2 class="text-xl text-slate-700 border-b pb-3 mb-4">Settings</h2>
-                <div class="text-slate-600 text-base">
-                    <p class="font-semibold">Target Drive Folder:</p>
-                    <p class="text-sm text-slate-500 break-all mt-1">Work_DataBase (ID: 1vmeGBBB1qEdHqdPxMU4OHMEIJbsKIzRt)</p>
-                </div>
-            </div>
-
         </div>
 
         <!-- Right Column: Details of Works Table -->
@@ -109,7 +92,7 @@
                 <div class="flex flex-col sm:flex-row justify-between items-center pb-4 border-b gap-4">
                     <h2 class="text-xl text-slate-700">Details of Works</h2>
                     
-                    <!-- Action Bar with Table Search Box right before Refresh -->
+                    <!-- Action Bar with Table Search Box -->
                     <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
                         <div class="relative">
                             <input type="text" id="tableSearchInput" placeholder="Filter table results..." 
@@ -204,20 +187,14 @@
             document.getElementById('modalCancelBtn').addEventListener('click', cleanUp);
         }
 
-        // Filter functionality
-        const filterFunction = (e) => {
+        // Filter functionality for the table search box
+        document.getElementById('tableSearchInput').addEventListener('input', function(e) {
             const term = e.target.value.toLowerCase();
             const rows = document.querySelectorAll('#workTableBody tr');
             rows.forEach(row => {
                 const text = row.innerText.toLowerCase();
                 row.style.display = text.includes(term) ? '' : 'none';
             });
-        };
-
-        document.getElementById('tableSearchInput').addEventListener('input', filterFunction);
-        document.getElementById('globalSearchInput').addEventListener('input', function(e) {
-            document.getElementById('tableSearchInput').value = e.target.value;
-            filterFunction(e);
         });
 
         // Select All Checkbox Handler
@@ -248,6 +225,13 @@
                 tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-500">No entries found.</td></tr>`;
                 return;
             }
+
+            // Sort results by Date of Entry (latest first) assuming format DD-MM-YYYY or YYYYMMDD
+            data.sort((a, b) => {
+                let dateA = a.entryDate.includes('-') ? a.entryDate.split('-').reverse().join('') : a.entryDate;
+                let dateB = b.entryDate.includes('-') ? b.entryDate.split('-').reverse().join('') : b.entryDate;
+                return dateB.localeCompare(dateA);
+            });
 
             data.forEach((row, index) => {
                 const tr = document.createElement('tr');
