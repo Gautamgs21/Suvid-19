@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Work Folder Management System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased min-h-screen flex flex-col">
+
+    <!-- Header -->
+    <header class="bg-blue-600 text-white shadow-md">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <h1 class="text-xl font-bold tracking-wide">Work Folder Management System</h1>
+            <!-- Search Bar -->
+            <div class="relative w-full sm:w-80">
+                <input type="text" id="searchInput" placeholder="Search works or dates..." 
+                    class="w-full pl-10 pr-4 py-2 rounded-lg text-slate-800 bg-white/90 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm">
+                <svg class="w-5 h-5 text-slate-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                </svg>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-7xl mx-auto px-4 py-6 flex-grow grid grid-cols-1 lg:grid-cols-3 gap-6 w-full">
+        
+        <!-- Left Column: Create Work Form & Settings -->
+        <div class="lg:col-span-1 flex flex-col gap-6">
+            
+            <!-- Create Work Card -->
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                <h2 class="text-base font-bold text-slate-700 border-b pb-3 mb-4 flex items-center gap-2">
+                    <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                    </svg>
+                    Create Work Entry
+                </h2>
+                <form id="workForm" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-slate-500 mb-1">Date of Entry</label>
+                        <input type="date" id="entryDate" required 
+                            class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-slate-500 mb-1">Name of the Folder / Work</label>
+                        <input type="text" id="workName" placeholder="e.g., SUC Assessment - Bharti Airtel" required 
+                            class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-slate-500 mb-1">Remarks</label>
+                        <textarea id="workRemarks" rows="3" placeholder="Enter remarks details..." 
+                            class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm resize-none"></textarea>
+                    </div>
+                    <button type="submit" 
+                        class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded-lg transition text-sm shadow-sm">
+                        Create New Entry
+                    </button>
+                </form>
+            </div>
+
+            <!-- Settings Card -->
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                <h2 class="text-base font-bold text-slate-700 border-b pb-3 mb-4">Settings</h2>
+                <div class="space-y-3 text-sm">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-slate-500 mb-1">Google Apps Script Web App URL</label>
+                        <input type="text" id="scriptUrl" placeholder="https://script.google.com/macros/s/.../exec" 
+                            class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Right Column: Details of Works Table -->
+        <div class="lg:col-span-2 flex flex-col gap-4">
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex-grow flex flex-col">
+                
+                <div class="flex flex-col sm:flex-row justify-between items-center pb-4 border-b gap-4">
+                    <h2 class="text-base font-bold text-slate-700">Details of Works</h2>
+                    <div class="flex items-center gap-2">
+                        <button id="refreshBtn" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold transition">
+                            Refresh
+                        </button>
+                        <button id="deleteBtn" class="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg text-xs font-semibold transition">
+                            Delete Selected
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Table Container -->
+                <div class="overflow-x-auto flex-grow mt-4">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-100 text-slate-600 text-xs uppercase tracking-wider">
+                                <th class="p-3 w-10 text-center"><input type="checkbox" id="selectAll" class="rounded"></th>
+                                <th class="p-3 w-16">Sl No</th>
+                                <th class="p-3">Name of the Work</th>
+                                <th class="p-3 w-32">Date of Entry</th>
+                                <th class="p-3 w-28 text-center">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="workTableBody" class="divide-y divide-slate-200 text-sm">
+                            <!-- Sample Mock Rows -->
+                            <tr class="hover:bg-slate-50">
+                                <td class="p-3 text-center"><input type="checkbox" class="row-select"></td>
+                                <td class="p-3 font-medium text-slate-500">1</td>
+                                <td class="p-3 font-medium text-slate-800">SUC Assessment - Bharti Airtel (2020-21)</td>
+                                <td class="p-3 text-slate-600">08-09-2026</td>
+                                <td class="p-3 text-center">
+                                    <a href="#" target="_blank" class="text-blue-600 hover:underline font-medium text-xs">Open Folder</a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+        </div>
+
+    </main>
+
+    <footer class="bg-white border-t py-3 text-center text-xs text-slate-400">
+        GitHub Pages Frontend Prototype
+    </footer>
+
+    <script>
+        // Instant filter/search across table content
+        document.getElementById('searchInput').addEventListener('input', function(e) {
+            const term = e.target.value.toLowerCase();
+            const rows = document.querySelectorAll('#workTableBody tr');
+            rows.forEach(row => {
+                const text = row.innerText.toLowerCase();
+                row.style.display = text.includes(term) ? '' : 'none';
+            });
+        });
+    </script>
+</body>
+</html>
