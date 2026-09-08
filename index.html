@@ -7,9 +7,9 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
-            font-family: 'Aptos Display', 'Segoe UI', sans-serif;
+            font-family: 'Aptos Serif', 'Segoe UI', serif;
             font-weight: 600;
-            font-size: 26px;
+            font-size: 25px;
         }
         input, textarea, button, table {
             font-weight: 400;
@@ -156,7 +156,13 @@
             filterFunction(e);
         });
 
-        // Load table data using JSONP to bypass CORS
+        // Select All Checkbox Handler
+        document.getElementById('selectAll').addEventListener('change', function() {
+            const checkboxes = document.querySelectorAll('.row-select');
+            checkboxes.forEach(cb => cb.checked = this.checked);
+        });
+
+        // Load table data using JSONP
         window.loadTableData = function() {
             const tbody = document.getElementById('workTableBody');
             tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-500">Loading entries...</td></tr>`;
@@ -170,7 +176,6 @@
             document.body.appendChild(script);
         };
 
-        // Callback function executed when JSONP data returns
         window.handleTableData = function(data) {
             const tbody = document.getElementById('workTableBody');
             tbody.innerHTML = '';
@@ -184,7 +189,7 @@
                 const tr = document.createElement('tr');
                 tr.className = 'hover:bg-slate-50';
                 tr.innerHTML = `
-                    <td class="p-3 text-center"><input type="checkbox" class="row-select"></td>
+                    <td class="p-3 text-center"><input type="checkbox" class="row-select" data-folder-id="${row.folderId}"></td>
                     <td class="p-3 text-slate-500">${index + 1}</td>
                     <td class="p-3 text-slate-800">${row.workName}</td>
                     <td class="p-3 text-slate-600">${row.entryDate}</td>
@@ -197,6 +202,49 @@
         };
 
         document.getElementById('refreshBtn').addEventListener('click', window.loadTableData);
+
+        // Delete Selected Folders via JSONP
+        document.getElementById('deleteBtn').addEventListener('click', function() {
+            const selectedCheckboxes = document.querySelectorAll('.row-select:checked');
+            if (selectedCheckboxes.length === 0) {
+                alert('Please select at least one entry to delete.');
+                return;
+            }
+
+            if (!confirm(`Are you sure you want to delete ${selectedCheckboxes.length} selected folder(s)?`)) {
+                return;
+            }
+
+            const deleteBtn = document.getElementById('deleteBtn');
+            deleteBtn.disabled = true;
+            deleteBtn.textContent = 'Deleting...';
+
+            let folderIds = Array.from(selectedCheckboxes).map(cb => cb.getAttribute('data-folder-id'));
+            
+            // Delete sequentially using JSONP script calls
+            let index = 0;
+            function deleteNext() {
+                if (index >= folderIds.length) {
+                    alert('Selected folders deleted successfully!');
+                    deleteBtn.disabled = false;
+                    deleteBtn.textContent = 'Delete Selected';
+                    document.getElementById('selectAll').checked = false;
+                    setTimeout(window.loadTableData, 1000);
+                    return;
+                }
+
+                let currentId = folderIds[index++];
+                let delScript = document.createElement('script');
+                delScript.src = `${SCRIPT_URL}?action=delete&folderId=${currentId}&callback=deleteDone`;
+                document.body.appendChild(delScript);
+            }
+
+            window.deleteDone = function(res) {
+                deleteNext();
+            };
+
+            deleteNext();
+        });
 
         // Handle Form Submission
         document.getElementById('workForm').addEventListener('submit', function(e) {
