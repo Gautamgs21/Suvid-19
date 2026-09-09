@@ -188,7 +188,7 @@
     <footer class="bg-white border-t py-3 text-center text-slate-400 px-4 text-xs sm:text-sm">
         GitHub Pages Frontend Connected to Apps Script
     </footer>
-
+    
     <script>
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxUvgiK-Iih8Vgh5F8-e7HiXAJHszCzFDNzwS9xMH9tS0EJBh4hJVH99jpsyajPUJZc/exec";
         const DEFAULT_FOLDER_ID = "1vmeGBBB1qEdHqdPxMU4OHMEIJbsKIzRt";
@@ -196,6 +196,17 @@
         let allTableData = [];
         let currentPage = 1;
         const rowsPerPage = 20;
+
+        // Helper function to convert YYYY-MM-DD to DD-MM-YYYY for display
+        function formatDateForDisplay(dateStr) {
+            if (!dateStr) return '';
+            let cleanStr = dateStr.includes('T') ? dateStr.split('T')[0] : dateStr;
+            let parts = cleanStr.split('-');
+            if (parts.length === 3) {
+                return `${parts[2]}-${parts[1]}-${parts[0]}`;
+            }
+            return cleanStr;
+        }
 
         // Toast Notification System
         function showToast(message, type = 'success') {
@@ -326,13 +337,14 @@
 
             paginatedData.forEach((row, index) => {
                 const actualIndex = startIdx + index + 1;
+                const displayDate = formatDateForDisplay(row.entryDate);
                 const tr = document.createElement('tr');
                 tr.className = 'hover:bg-slate-50';
                 tr.innerHTML = `
                     <td class="p-2.5 sm:p-3 text-center"><input type="checkbox" class="row-select" data-folder-id="${row.folderId}"></td>
                     <td class="p-2.5 sm:p-3 text-slate-500">${actualIndex}</td>
                     <td class="p-2.5 sm:p-3 text-slate-800 break-words">${row.workName}</td>
-                    <td class="p-2.5 sm:p-3 text-slate-600 whitespace-nowrap">${row.entryDate}</td>
+                    <td class="p-2.5 sm:p-3 text-slate-600 whitespace-nowrap">${displayDate}</td>
                     <td class="p-2.5 sm:p-3 text-center">
                         <div class="flex items-center justify-center gap-2">
                             <!-- Open Folder Icon -->
@@ -358,11 +370,12 @@
             document.getElementById('nextPageBtn').disabled = currentPage === totalPages || totalPages === 0;
         }
 
-        // Filter functionality for table search box
+        // Filter functionality for table search box (supports searching by formatted DD-MM-YYYY or work name)
         document.getElementById('tableSearchInput').addEventListener('input', function(e) {
             const term = e.target.value.toLowerCase();
             const filteredData = allTableData.filter(row => {
-                return row.workName.toLowerCase().includes(term) || row.entryDate.toLowerCase().includes(term);
+                const displayDate = formatDateForDisplay(row.entryDate).toLowerCase();
+                return row.workName.toLowerCase().includes(term) || displayDate.includes(term);
             });
             currentPage = 1;
             renderTable(filteredData);
@@ -373,14 +386,20 @@
             if (currentPage > 1) {
                 currentPage--;
                 const term = document.getElementById('tableSearchInput').value.toLowerCase();
-                const filteredData = allTableData.filter(row => row.workName.toLowerCase().includes(term) || row.entryDate.toLowerCase().includes(term));
+                const filteredData = allTableData.filter(row => {
+                    const displayDate = formatDateForDisplay(row.entryDate).toLowerCase();
+                    return row.workName.toLowerCase().includes(term) || displayDate.includes(term);
+                });
                 renderTable(filteredData);
             }
         });
 
         document.getElementById('nextPageBtn').addEventListener('click', () => {
             const term = document.getElementById('tableSearchInput').value.toLowerCase();
-            const filteredData = allTableData.filter(row => row.workName.toLowerCase().includes(term) || row.entryDate.toLowerCase().includes(term));
+            const filteredData = allTableData.filter(row => {
+                const displayDate = formatDateForDisplay(row.entryDate).toLowerCase();
+                return row.workName.toLowerCase().includes(term) || displayDate.includes(term);
+            });
             const totalPages = Math.ceil(filteredData.length / rowsPerPage);
             if (currentPage < totalPages) {
                 currentPage++;
@@ -429,8 +448,8 @@
                 }
 
                 data.sort((a, b) => {
-                    let dateA = a.entryDate.includes('-') ? a.entryDate.split('-').reverse().join('') : a.entryDate;
-                    let dateB = b.entryDate.includes('-') ? b.entryDate.split('-').reverse().join('') : b.entryDate;
+                    let dateA = a.entryDate ? a.entryDate.replace(/-/g, '') : '';
+                    let dateB = b.entryDate ? b.entryDate.replace(/-/g, '') : '';
                     return dateB.localeCompare(dateA);
                 });
 
