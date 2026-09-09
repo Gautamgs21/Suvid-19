@@ -159,7 +159,7 @@
                             <div class="loader"></div>
                             <span id="loadingPercentage" class="absolute font-bold text-white drop-shadow">0%</span>
                         </div>
-                        <span id="loadingStatusText" class="font-semibold text-slate-600 text-center px-4">Connecting to Google Drive...</span>
+                        <span id="loadingStatusText" class="font-semibold text-slate-600 text-center px-4">Loading from Database...</span>
                     </div>
 
                     <table class="w-full text-left border-collapse min-w-[550px]">
@@ -279,17 +279,17 @@
             overlay.classList.remove('hidden', 'opacity-0');
             statusText.textContent = statusMessage;
             
-            let currentPercent = 10;
+            let currentPercent = 20;
             percentageText.textContent = currentPercent + '%';
 
             if (progressInterval) clearInterval(progressInterval);
             progressInterval = setInterval(() => {
-                if (currentPercent < 92) {
-                    currentPercent += Math.floor(Math.random() * 5) + 2;
-                    if (currentPercent > 92) currentPercent = 92;
+                if (currentPercent < 95) {
+                    currentPercent += Math.floor(Math.random() * 10) + 5;
+                    if (currentPercent > 95) currentPercent = 95;
                     percentageText.textContent = currentPercent + '%';
                 }
-            }, 200);
+            }, 100);
         }
 
         function stopLoading(onComplete) {
@@ -306,8 +306,8 @@
                 setTimeout(() => {
                     overlay.classList.add('hidden');
                     if (onComplete) onComplete();
-                }, 300);
-            }, 300);
+                }, 200);
+            }, 200);
         }
 
         // Render Table Data with Pagination
@@ -364,7 +364,6 @@
                 tbody.appendChild(tr);
             });
 
-            // Update Pagination Info & Buttons
             document.getElementById('paginationInfo').textContent = `Showing ${startIdx + 1}-${Math.min(endIdx, dataToRender.length)} of ${dataToRender.length} entries`;
             document.getElementById('prevPageBtn').disabled = currentPage === 1;
             document.getElementById('nextPageBtn').disabled = currentPage === totalPages || totalPages === 0;
@@ -406,9 +405,22 @@
             checkboxes.forEach(cb => cb.checked = this.checked);
         });
 
-        // Load table data using JSONP
+        // Load table data with Client-Side localStorage Caching for instant render
         window.loadTableData = function() {
-            startLoading('Scanning Google Drive Folders...');
+            const cachedData = localStorage.getItem('workFolderCache');
+            if (cachedData) {
+                try {
+                    allTableData = JSON.parse(cachedData);
+                    renderTable(allTableData);
+                    // Hide loader immediately if cache exists for instant feedback
+                    document.getElementById('loadingOverlay').classList.add('opacity-0');
+                    setTimeout(() => document.getElementById('loadingOverlay').classList.add('hidden'), 200);
+                } catch (e) {
+                    startLoading('Loading from Database...');
+                }
+            } else {
+                startLoading('Loading from Database...');
+            }
 
             const oldScript = document.getElementById('jsonpScript');
             if (oldScript) oldScript.remove();
@@ -423,11 +435,11 @@
             stopLoading(() => {
                 if (!data || data.length === 0) {
                     allTableData = [];
+                    localStorage.removeItem('workFolderCache');
                     renderTable([]);
                     return;
                 }
 
-                // Sort results by Date of Entry (latest first)
                 data.sort((a, b) => {
                     let dateA = a.entryDate.includes('-') ? a.entryDate.split('-').reverse().join('') : a.entryDate;
                     let dateB = b.entryDate.includes('-') ? b.entryDate.split('-').reverse().join('') : b.entryDate;
@@ -435,7 +447,7 @@
                 });
 
                 allTableData = data;
-                currentPage = 1;
+                localStorage.setItem('workFolderCache', JSON.stringify(data));
                 renderTable(allTableData);
             });
         };
@@ -453,7 +465,7 @@
         window.renameDone = function(res) {
             stopLoading(() => {
                 showToast('Folder renamed successfully!', 'success');
-                setTimeout(window.loadTableData, 500);
+                setTimeout(window.loadTableData, 300);
             });
         };
 
@@ -470,7 +482,7 @@
         window.singleDeleteDone = function(res) {
             stopLoading(() => {
                 showToast('Folder deleted successfully!', 'success');
-                setTimeout(window.loadTableData, 500);
+                setTimeout(window.loadTableData, 300);
             });
         };
 
@@ -526,7 +538,7 @@
                             stopLoading(() => {
                                 showToast('Selected folders deleted successfully!', 'success');
                                 document.getElementById('selectAll').checked = false;
-                                setTimeout(window.loadTableData, 500);
+                                setTimeout(window.loadTableData, 300);
                             });
                             return;
                         }
@@ -576,7 +588,7 @@
                     document.getElementById('workForm').reset();
                     submitBtn.disabled = false;
                     submitBtn.textContent = 'Create New Entry';
-                    setTimeout(window.loadTableData, 1000);
+                    setTimeout(window.loadTableData, 500);
                 });
             })
             .catch(error => {
