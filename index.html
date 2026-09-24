@@ -373,6 +373,72 @@
         :root[data-theme="dark"] #loadingStatusText {
             color: var(--ink-soft) !important;
         }
+
+        /* ---------- 90% WIDTH CONTAINER (NEW) ---------- */
+        .app-container {
+            width: 90%;
+            max-width: 1600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        /* Ensure header inner and main use the same 90% container */
+        .header-inner {
+            width: 90%;
+            max-width: 1600px;
+            margin-left: auto;
+            margin-right: auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 0.75rem;
+            padding-bottom: 0.75rem;
+        }
+        @media (min-width: 640px) {
+            .header-inner {
+                padding-top: 1rem;
+                padding-bottom: 1rem;
+            }
+        }
+
+        /* Adjust main grid to fit 90% width */
+        main.app-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1rem;
+            padding-top: 1rem;
+            padding-bottom: 1.5rem;
+            flex-grow: 1;
+        }
+        @media (min-width: 1024px) {
+            main.app-container {
+                grid-template-columns: repeat(12, 1fr);
+                gap: 1.5rem;
+            }
+        }
+
+        /* Override max-width for main and header from Tailwind */
+        .max-w-7xl {
+            max-width: 90% !important;
+            width: 90% !important;
+            margin-left: auto !important;
+            margin-right: auto !important;
+        }
+        /* But we use our own classes, so ensure they take precedence */
+        .app-container {
+            width: 90% !important;
+            max-width: 1600px !important;
+        }
+        /* Remove default horizontal padding from main and header, rely on width */
+        main.app-container, .header-inner {
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+        }
+        /* But keep some inner spacing for small screens */
+        @media (max-width: 640px) {
+            .app-container {
+                width: 94% !important; /* slightly wider on small screens for better use */
+            }
+        }
     </style>
 </head>
 <body class="min-h-screen flex flex-col relative overflow-x-hidden text-sm sm:text-base lg:text-lg">
@@ -406,13 +472,13 @@
 
     <!-- Header -->
     <header class="sura-header shadow-md">
-        <div class="max-w-7xl mx-auto px-4 py-3 sm:py-4 flex justify-between items-center">
+        <div class="header-inner">
             <h1 class="text-xl sm:text-2xl lg:text-3xl tracking-wide" style="font-weight:600;">Work Folder Management System</h1>
         </div>
     </header>
 
-    <!-- Main Container -->
-    <main class="max-w-7xl mx-auto px-2 sm:px-4 py-4 sm:py-6 flex-grow grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 w-full">
+    <!-- Main Container (90% width, max 1600px) -->
+    <main class="app-container flex-grow">
 
         <!-- Left Column: Create Work Form -->
         <div class="lg:col-span-4 flex flex-col gap-4 sm:gap-6">
