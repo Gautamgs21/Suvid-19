@@ -6,110 +6,438 @@
     <title>Work Folder Management System</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body {
-            font-family: 'Aptos Serif', 'Segoe UI', serif;
-            font-weight: 600;
+        /* ---------- design tokens (match SURA index.html) ---------- */
+        :root {
+            --ink: #182233;
+            --ink-soft: #4b5768;
+            --paper: #F5F3EE;
+            --paper-raised: #FBFAF6;
+            --line: #CBD0C7;
+            --line-soft: #DDE0D9;
+            --brass: #9C7327;
+            --brass-soft: #EFE3C8;
+            --teal: #2C6357;
+            --teal-soft: #DEEAE5;
+            --red: #9C3B31;
+            --red-soft: #F3DEDA;
+            --green: #2E7D32;
+            --font-sans: "Aptos Display", -apple-system, "Segoe UI", sans-serif;
+            --radius: 4px;
+            --shadow-card: 0 1px 3px rgba(0,0,0,0.03);
+            --transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
         }
-        input, textarea, button, table {
+
+        :root[data-theme="dark"] {
+            --ink: #E9ECE6;
+            --ink-soft: #AEB6A8;
+            --paper: #161B15;
+            --paper-raised: #1E241C;
+            --line: #333B30;
+            --line-soft: #2A3128;
+            --brass: #D4A94B;
+            --brass-soft: #332A16;
+            --teal: #7FBDA9;
+            --teal-soft: #1B2C26;
+            --red: #D98A7C;
+            --red-soft: #3A211D;
+            --green: #6FCF77;
+            --shadow-card: 0 1px 3px rgba(0,0,0,0.4);
+        }
+
+        html, body { height: 100%; }
+
+        body {
+            font-family: var(--font-sans);
             font-weight: 400;
+            background: var(--paper);
+            color: var(--ink);
+            transition: var(--transition);
+            -webkit-font-smoothing: antialiased;
+        }
+
+        input, textarea, button, table, select {
+            font-weight: 400;
+            font-family: var(--font-sans);
         }
         label, h1, h2, th {
             font-weight: 600;
         }
+
         #toastContainer {
             transition: all 0.3s ease-in-out;
         }
 
-        /* New loader animation */
+        /* New loader animation (unchanged) */
         .loader {
-         width: 60px;
-         aspect-ratio: 1;
-         background: 
-            linear-gradient(45deg,#60B99A 50%,#0000 0),
-            linear-gradient(45deg,#0000 50%,#60B99A 0),
-            linear-gradient(-45deg,#f77825 50%,#0000 0),
-            linear-gradient(-45deg,#0000 50%,#f77825 0),
-            linear-gradient(#554236 0 0);
-         background-size: 50% 50%;
-         background-repeat: no-repeat;
-         animation: l18 1.5s infinite;
+            width: 60px;
+            aspect-ratio: 1;
+            background:
+                linear-gradient(45deg,#60B99A 50%,#0000 0),
+                linear-gradient(45deg,#0000 50%,#60B99A 0),
+                linear-gradient(-45deg,#f77825 50%,#0000 0),
+                linear-gradient(-45deg,#0000 50%,#f77825 0),
+                linear-gradient(#554236 0 0);
+            background-size: 50% 50%;
+            background-repeat: no-repeat;
+            animation: l18 1.5s infinite;
         }
         @keyframes l18{
-         0%   {background-position:50% 50%,50% 50%,50%  50% ,50% 50%,50% 50%}
-         25%  {background-position:0  100%,100%  0,50%  50% ,50% 50%,50% 50%}
-         50%  {background-position:0  100%,100%  0,100% 100%,0   0  ,50% 50%}
-         75%  {background-position:50% 50%,50% 50%,100% 100%,0   0  ,50% 50%}
-         100% {background-position:50% 50%,50% 50%,50%  50% ,50% 50%,50% 50%}
+            0%   {background-position:50% 50%,50% 50%,50%  50% ,50% 50%,50% 50%}
+            25%  {background-position:0  100%,100%  0,50%  50% ,50% 50%,50% 50%}
+            50%  {background-position:0  100%,100%  0,100% 100%,0   0  ,50% 50%}
+            75%  {background-position:50% 50%,50% 50%,100% 100%,0   0  ,50% 50%}
+            100% {background-position:50% 50%,50% 50%,50%  50% ,50% 50%,50% 50%}
+        }
+
+        /* ---------- SURA-style components ---------- */
+        .sura-header {
+            background: var(--ink);
+            color: var(--paper-raised);
+            border-bottom: 2px solid var(--ink);
+        }
+        :root[data-theme="dark"] .sura-header {
+            background: var(--paper-raised);
+            color: var(--ink);
+            border-bottom-color: var(--line);
+        }
+
+        .sura-panel {
+            background: var(--paper-raised);
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-card);
+            transition: var(--transition);
+        }
+
+        .sura-panel h2 {
+            font-family: var(--font-sans);
+            color: var(--ink);
+            border-bottom: 1px solid var(--line-soft);
+            padding-bottom: 12px;
+            margin-bottom: 16px;
+            font-size: 17px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sura-panel h2 svg {
+            color: var(--brass);
+            flex-shrink: 0;
+        }
+
+        .sura-label {
+            display: block;
+            text-transform: uppercase;
+            color: var(--ink-soft);
+            font-size: 12px;
+            margin-bottom: 4px;
+            letter-spacing: 0.03em;
+            font-weight: 500;
+        }
+
+        .sura-input {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid var(--line);
+            border-radius: 3px;
+            background: var(--paper);
+            color: var(--ink);
+            font-size: 14px;
+            transition: var(--transition);
+            outline: none;
+        }
+        .sura-input:focus {
+            outline: 2px solid var(--brass);
+            outline-offset: 1px;
+            border-color: var(--brass);
+        }
+        .sura-input::placeholder {
+            color: var(--ink-soft);
+            opacity: 0.6;
+        }
+
+        .sura-btn-primary {
+            width: 100%;
+            background: var(--ink);
+            color: var(--paper-raised);
+            padding: 10px 14px;
+            border: none;
+            border-radius: 3px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            letter-spacing: 0.01em;
+            transition: var(--transition);
+        }
+        .sura-btn-primary:hover:not(:disabled) {
+            background: var(--brass);
+            color: #1a1200;
+        }
+        .sura-btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        :root[data-theme="dark"] .sura-btn-primary {
+            background: var(--brass);
+            color: #1a1200;
+        }
+        :root[data-theme="dark"] .sura-btn-primary:hover:not(:disabled) {
+            background: var(--ink);
+            color: var(--paper-raised);
+        }
+
+        .sura-btn-ghost {
+            background: transparent;
+            color: var(--ink-soft);
+            border: 1px solid var(--line);
+            border-radius: 3px;
+            padding: 7px 12px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .sura-btn-ghost:hover:not(:disabled) {
+            border-color: var(--ink);
+            color: var(--ink);
+        }
+        .sura-btn-ghost:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .sura-btn-warn {
+            background: transparent;
+            color: var(--red);
+            border: 1px solid var(--line);
+            border-radius: 3px;
+            padding: 7px 12px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .sura-btn-warn:hover {
+            border-color: var(--red);
+            background: var(--red-soft);
+        }
+
+        /* table styling to match SURA ledger */
+        .sura-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .sura-table thead th {
+            background: var(--paper);
+            color: var(--ink-soft);
+            text-transform: uppercase;
+            font-size: 11px;
+            letter-spacing: 0.05em;
+            font-weight: 600;
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--ink);
+            text-align: left;
+        }
+        .sura-table tbody td {
+            padding: 10px 12px;
+            font-size: 13px;
+            border-bottom: 1px solid var(--line-soft);
+            color: var(--ink);
+            vertical-align: middle;
+        }
+        .sura-table tbody tr:hover {
+            background: var(--paper);
+        }
+        .sura-table .sl-no {
+            color: var(--ink-soft);
+            font-weight: 500;
+        }
+
+        .sura-checkbox {
+            accent-color: var(--brass);
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+
+        .sura-icon-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 30px;
+            height: 30px;
+            border-radius: 3px;
+            border: 1px solid var(--line);
+            background: var(--paper-raised);
+            cursor: pointer;
+            transition: var(--transition);
+            text-decoration: none;
+        }
+        .sura-icon-btn:hover {
+            background: var(--paper);
+        }
+        .sura-icon-btn.open { color: var(--teal); }
+        .sura-icon-btn.open:hover { border-color: var(--teal); }
+        .sura-icon-btn.edit { color: var(--brass); }
+        .sura-icon-btn.edit:hover { border-color: var(--brass); }
+        .sura-icon-btn.del { color: var(--red); }
+        .sura-icon-btn.del:hover { border-color: var(--red); background: var(--red-soft); }
+
+        /* modal styling */
+        .sura-modal-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 50;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+        .sura-modal {
+            background: var(--paper-raised);
+            border: 1px solid var(--line);
+            border-radius: 6px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            max-width: 460px;
+            width: 100%;
+            padding: 22px 24px;
+        }
+        .sura-modal h3 {
+            font-size: 17px;
+            color: var(--ink);
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        .sura-modal p {
+            color: var(--ink-soft);
+            font-size: 14px;
+            margin-bottom: 18px;
+        }
+
+        /* toast */
+        .sura-toast {
+            padding: 12px 20px;
+            border-radius: 4px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+            font-size: 14px;
+            font-weight: 500;
+            pointer-events: auto;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #fff;
+            opacity: 0;
+            transform: translateY(8px);
+            transition: all 0.3s ease;
+        }
+        .sura-toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .sura-toast.success { background: var(--teal); }
+        .sura-toast.error   { background: var(--red); }
+
+        /* footer */
+        .sura-footer {
+            background: var(--paper-raised);
+            border-top: 1px solid var(--line);
+            color: var(--ink-soft);
+            text-align: center;
+            padding: 12px 16px;
+            font-size: 12px;
+        }
+
+        /* search icon position helper */
+        .sura-search-wrap {
+            position: relative;
+            display: inline-block;
+        }
+        .sura-search-wrap input {
+            padding-left: 32px;
+        }
+        .sura-search-wrap svg {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--ink-soft);
+            pointer-events: none;
+        }
+
+        /* dark mode overrides for loading overlay */
+        :root[data-theme="dark"] #loadingOverlay {
+            background: rgba(30, 36, 28, 0.95) !important;
+        }
+        :root[data-theme="dark"] #loadingStatusText {
+            color: var(--ink-soft) !important;
         }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col relative overflow-x-hidden text-sm sm:text-base lg:text-lg">
+<body class="min-h-screen flex flex-col relative overflow-x-hidden text-sm sm:text-base lg:text-lg">
 
     <!-- Toast Notification Container -->
     <div id="toastContainer" class="fixed top-5 right-5 z-50 flex flex-col gap-3 pointer-events-none max-w-[90vw]"></div>
 
     <!-- Custom Web App Confirmation Modal -->
-    <div id="confirmModal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl shadow-xl max-w-md w-full p-6 space-y-4">
-            <h3 class="font-bold text-slate-800 text-lg sm:text-xl" id="modalTitle">Confirm Action</h3>
-            <p class="text-slate-600 text-sm sm:text-base" id="modalMessage">Are you sure you want to proceed?</p>
+    <div id="confirmModal" class="sura-modal-backdrop hidden">
+        <div class="sura-modal">
+            <h3 id="modalTitle">Confirm Action</h3>
+            <p id="modalMessage">Are you sure you want to proceed?</p>
             <div class="flex justify-end gap-3 pt-2">
-                <button id="modalCancelBtn" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-semibold transition text-sm sm:text-base">Cancel</button>
-                <button id="modalConfirmBtn" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition text-sm sm:text-base">Confirm</button>
+                <button id="modalCancelBtn" class="sura-btn-ghost">Cancel</button>
+                <button id="modalConfirmBtn" class="sura-btn-primary" style="width:auto; padding:8px 18px;">Confirm</button>
             </div>
         </div>
     </div>
 
     <!-- Custom Input Prompt Modal for Renaming -->
-    <div id="promptModal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl shadow-xl max-w-md w-full p-6 space-y-4">
-            <h3 class="font-bold text-slate-800 text-lg sm:text-xl" id="promptTitle">Edit Folder Name</h3>
-            <input type="text" id="promptInput" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base">
+    <div id="promptModal" class="sura-modal-backdrop hidden">
+        <div class="sura-modal">
+            <h3 id="promptTitle">Edit Folder Name</h3>
+            <input type="text" id="promptInput" class="sura-input" style="margin-bottom:18px;">
             <div class="flex justify-end gap-3 pt-2">
-                <button id="promptCancelBtn" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-semibold transition text-sm sm:text-base">Cancel</button>
-                <button id="promptConfirmBtn" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition text-sm sm:text-base">Save</button>
+                <button id="promptCancelBtn" class="sura-btn-ghost">Cancel</button>
+                <button id="promptConfirmBtn" class="sura-btn-primary" style="width:auto; padding:8px 18px;">Save</button>
             </div>
         </div>
     </div>
 
     <!-- Header -->
-    <header class="bg-blue-600 text-white shadow-md">
+    <header class="sura-header shadow-md">
         <div class="max-w-7xl mx-auto px-4 py-3 sm:py-4 flex justify-between items-center">
-            <h1 class="text-xl sm:text-2xl lg:text-3xl tracking-wide">Work Folder Management System</h1>
+            <h1 class="text-xl sm:text-2xl lg:text-3xl tracking-wide" style="font-weight:600;">Work Folder Management System</h1>
         </div>
     </header>
 
-    <!-- Main Container: Differentiates Mobile vs Computer Layouts -->
+    <!-- Main Container -->
     <main class="max-w-7xl mx-auto px-2 sm:px-4 py-4 sm:py-6 flex-grow grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 w-full">
-        
-        <!-- Left Column: Create Work Form (Span 4 on Desktop, Full on Mobile) -->
+
+        <!-- Left Column: Create Work Form -->
         <div class="lg:col-span-4 flex flex-col gap-4 sm:gap-6">
-            
-            <div class="bg-white p-4 sm:p-6 rounded-xl shadow-sm border border-slate-200">
-                <h2 class="text-slate-700 text-base sm:text-lg lg:text-xl border-b pb-2 sm:pb-3 mb-3 sm:mb-4 flex items-center gap-2">
-                    <svg class="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+
+            <div class="sura-panel p-4 sm:p-6">
+                <h2>
+                    <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                     </svg>
                     Create Work Entry
                 </h2>
                 <form id="workForm" class="space-y-3 sm:space-y-4">
                     <div>
-                        <label class="block uppercase text-slate-500 text-xs sm:text-sm mb-1">Date of Entry</label>
-                        <input type="date" id="entryDate" required 
-                            class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base">
+                        <label class="sura-label">Date of Entry</label>
+                        <input type="date" id="entryDate" required class="sura-input">
                     </div>
                     <div>
-                        <label class="block uppercase text-slate-500 text-xs sm:text-sm mb-1">Name of the Folder / Work</label>
-                        <input type="text" id="workName" placeholder="e.g., SUC Assessment - Bharti Airtel" required 
-                            class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base">
+                        <label class="sura-label">Name of the Folder / Work</label>
+                        <input type="text" id="workName" placeholder="e.g., SUC Assessment - Bharti Airtel" required class="sura-input">
                     </div>
                     <div>
-                        <label class="block uppercase text-slate-500 text-xs sm:text-sm mb-1">Remarks</label>
-                        <textarea id="workRemarks" rows="3" placeholder="Enter remarks details..." 
-                            class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none text-sm sm:text-base"></textarea>
+                        <label class="sura-label">Remarks</label>
+                        <textarea id="workRemarks" rows="3" placeholder="Enter remarks details..." class="sura-input" style="resize:none;"></textarea>
                     </div>
-                    <button type="submit" id="submitBtn"
-                        class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-lg transition shadow-sm font-semibold text-sm sm:text-base">
+                    <button type="submit" id="submitBtn" class="sura-btn-primary">
                         Create New Entry
                     </button>
                 </form>
@@ -117,27 +445,27 @@
 
         </div>
 
-        <!-- Right Column: Details of Works Table (Span 8 on Desktop, Full on Mobile) -->
+        <!-- Right Column: Details of Works Table -->
         <div class="lg:col-span-8 flex flex-col gap-4 min-w-0">
-            <div class="bg-white p-4 sm:p-6 rounded-xl shadow-sm border border-slate-200 flex-grow flex flex-col min-w-0">
-                
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center pb-3 sm:pb-4 border-b gap-3 sm:gap-4">
-                    <h2 class="text-slate-700 text-base sm:text-lg lg:text-xl">Details of Works</h2>
-                    
+            <div class="sura-panel p-4 sm:p-6 flex-grow flex flex-col min-w-0">
+
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center pb-3 sm:pb-4 border-b gap-3 sm:gap-4" style="border-color:var(--line-soft);">
+                    <h2 class="text-base sm:text-lg lg:text-xl" style="border:none; padding:0; margin:0; font-weight:600; color:var(--ink);">Details of Works</h2>
+
                     <!-- Action Bar with Table Search Box -->
                     <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-start sm:justify-end">
-                        <div class="relative w-full sm:w-auto">
-                            <input type="text" id="tableSearchInput" placeholder="Filter table results..." 
-                                class="pl-8 pr-3 py-1.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-56 text-sm sm:text-base">
-                            <svg class="w-4 h-4 sm:w-5 sm:h-5 text-slate-400 absolute left-2.5 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div class="sura-search-wrap w-full sm:w-auto">
+                            <input type="text" id="tableSearchInput" placeholder="Filter table results..."
+                                class="sura-input w-full sm:w-56" style="padding-top:6px; padding-bottom:6px;">
+                            <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                             </svg>
                         </div>
                         <div class="flex gap-2 w-full sm:w-auto justify-end">
-                            <button id="refreshBtn" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-semibold transition shrink-0 text-sm sm:text-base">
+                            <button id="refreshBtn" class="sura-btn-ghost shrink-0">
                                 Refresh
                             </button>
-                            <button id="deleteBtn" class="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg font-semibold transition shrink-0 text-sm sm:text-base">
+                            <button id="deleteBtn" class="sura-btn-warn shrink-0">
                                 Delete Selected
                             </button>
                         </div>
@@ -146,37 +474,39 @@
 
                 <!-- Table Container -->
                 <div class="overflow-x-auto flex-grow mt-3 sm:mt-4 relative min-h-[250px] sm:min-h-[300px] w-full">
-                    <!-- Loading Overlay with New Loader Animation + Real-Time Percentage -->
-                    <div id="loadingOverlay" class="absolute inset-0 bg-white/95 backdrop-blur-sm z-20 flex flex-col items-center justify-center gap-3 transition-opacity duration-300">
+                    <!-- Loading Overlay -->
+                    <div id="loadingOverlay" class="absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 transition-opacity duration-300"
+                         style="background: rgba(251, 250, 246, 0.95); backdrop-filter: blur(4px);">
                         <div class="relative flex items-center justify-center">
                             <div class="loader"></div>
                             <span id="loadingPercentage" class="absolute font-bold text-white drop-shadow text-xs">0%</span>
                         </div>
-                        <span id="loadingStatusText" class="font-semibold text-slate-600 text-center px-4 text-sm sm:text-base">Loading from Database...</span>
+                        <span id="loadingStatusText" class="font-semibold text-center px-4 text-sm sm:text-base" style="color: var(--ink-soft);">Loading from Database...</span>
                     </div>
 
-                    <table class="w-full text-left border-collapse min-w-[500px] text-sm sm:text-base">
+                    <table class="sura-table min-w-[500px]">
                         <thead>
-                            <tr class="bg-slate-100 text-slate-600 uppercase tracking-wider text-xs sm:text-sm">
-                                <th class="p-2.5 sm:p-3 w-10 text-center"><input type="checkbox" id="selectAll" class="rounded"></th>
-                                <th class="p-2.5 sm:p-3 w-14">Sl No</th>
-                                <th class="p-2.5 sm:p-3">Name of the Work</th>
-                                <th class="p-2.5 sm:p-3 w-32">Date of Entry</th>
-                                <th class="p-2.5 sm:p-3 w-28 text-center">Action</th>
+                            <tr>
+                                <th class="w-10 text-center"><input type="checkbox" id="selectAll" class="sura-checkbox"></th>
+                                <th class="w-14">Sl No</th>
+                                <th>Name of the Work</th>
+                                <th class="w-32">Date of Entry</th>
+                                <th class="w-28 text-center">Action</th>
                             </tr>
                         </thead>
-                        <tbody id="workTableBody" class="divide-y divide-slate-200">
-                            <!-- Dynamic rows will be loaded here -->
+                        <tbody id="workTableBody" class="divide-y" style="border-color: var(--line-soft);">
+                            <!-- Dynamic rows -->
                         </tbody>
                     </table>
                 </div>
 
                 <!-- Pagination Container -->
-                <div id="paginationContainer" class="flex flex-col sm:flex-row justify-between items-center pt-3 sm:pt-4 border-t mt-3 sm:mt-4 gap-3 text-slate-600 text-sm sm:text-base">
+                <div id="paginationContainer" class="flex flex-col sm:flex-row justify-between items-center pt-3 sm:pt-4 border-t mt-3 sm:mt-4 gap-3 text-sm sm:text-base"
+                     style="border-color: var(--line-soft); color: var(--ink-soft);">
                     <span id="paginationInfo">Showing 0-0 of 0 entries</span>
                     <div class="flex gap-2 w-full sm:w-auto justify-between sm:justify-end">
-                        <button id="prevPageBtn" class="px-3 py-1 bg-slate-100 hover:bg-slate-200 rounded-lg font-semibold disabled:opacity-50 flex-1 sm:flex-initial text-center" disabled>Previous</button>
-                        <button id="nextPageBtn" class="px-3 py-1 bg-slate-100 hover:bg-slate-200 rounded-lg font-semibold disabled:opacity-50 flex-1 sm:flex-initial text-center" disabled>Next</button>
+                        <button id="prevPageBtn" class="sura-btn-ghost flex-1 sm:flex-initial text-center" disabled>Previous</button>
+                        <button id="nextPageBtn" class="sura-btn-ghost flex-1 sm:flex-initial text-center" disabled>Next</button>
                     </div>
                 </div>
 
@@ -185,10 +515,10 @@
 
     </main>
 
-    <footer class="bg-white border-t py-3 text-center text-slate-400 px-4 text-xs sm:text-sm">
+    <footer class="sura-footer">
         GitHub Pages Frontend Connected to Apps Script
     </footer>
-    
+
     <script>
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxUvgiK-Iih8Vgh5F8-e7HiXAJHszCzFDNzwS9xMH9tS0EJBh4hJVH99jpsyajPUJZc/exec";
         const DEFAULT_FOLDER_ID = "1vmeGBBB1qEdHqdPxMU4OHMEIJbsKIzRt";
@@ -208,18 +538,17 @@
             return cleanStr;
         }
 
-        // Toast Notification System
+        // Toast Notification System (themed)
         function showToast(message, type = 'success') {
             const container = document.getElementById('toastContainer');
             const toast = document.createElement('div');
-            let bgClass = type === 'success' ? 'bg-emerald-600' : 'bg-red-600';
-            toast.className = `${bgClass} text-white px-4 py-2.5 sm:px-5 sm:py-3 rounded-xl shadow-lg pointer-events-auto flex items-center justify-between gap-4 transition-all duration-300 opacity-0 translate-y-2 text-sm sm:text-base`;
+            toast.className = `sura-toast ${type}`;
             toast.innerHTML = `<span>${message}</span>`;
-            
+
             container.appendChild(toast);
-            setTimeout(() => toast.classList.remove('opacity-0', 'translate-y-2'), 10);
+            setTimeout(() => toast.classList.add('show'), 10);
             setTimeout(() => {
-                toast.classList.add('opacity-0', 'translate-y-2');
+                toast.classList.remove('show');
                 setTimeout(() => toast.remove(), 300);
             }, 3500);
         }
@@ -279,10 +608,10 @@
             const overlay = document.getElementById('loadingOverlay');
             const percentageText = document.getElementById('loadingPercentage');
             const statusText = document.getElementById('loadingStatusText');
-            
+
             overlay.classList.remove('hidden', 'opacity-0');
             statusText.textContent = statusMessage;
-            
+
             let currentPercent = 20;
             percentageText.textContent = currentPercent + '%';
 
@@ -318,9 +647,9 @@
         function renderTable(dataToRender) {
             const tbody = document.getElementById('workTableBody');
             tbody.innerHTML = '';
-            
+
             if (!dataToRender || dataToRender.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-500">No entries found.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center" style="color: var(--ink-soft);">No entries found.</td></tr>`;
                 document.getElementById('paginationInfo').textContent = 'Showing 0-0 of 0 entries';
                 document.getElementById('prevPageBtn').disabled = true;
                 document.getElementById('nextPageBtn').disabled = true;
@@ -339,25 +668,21 @@
                 const actualIndex = startIdx + index + 1;
                 const displayDate = formatDateForDisplay(row.entryDate);
                 const tr = document.createElement('tr');
-                tr.className = 'hover:bg-slate-50';
                 tr.innerHTML = `
-                    <td class="p-2.5 sm:p-3 text-center"><input type="checkbox" class="row-select" data-folder-id="${row.folderId}"></td>
-                    <td class="p-2.5 sm:p-3 text-slate-500">${actualIndex}</td>
-                    <td class="p-2.5 sm:p-3 text-slate-800 break-words">${row.workName}</td>
-                    <td class="p-2.5 sm:p-3 text-slate-600 whitespace-nowrap">${displayDate}</td>
-                    <td class="p-2.5 sm:p-3 text-center">
+                    <td class="text-center"><input type="checkbox" class="row-select sura-checkbox" data-folder-id="${row.folderId}"></td>
+                    <td class="sl-no">${actualIndex}</td>
+                    <td style="color: var(--ink); word-break: break-word;">${row.workName}</td>
+                    <td style="color: var(--ink-soft); white-space: nowrap;">${displayDate}</td>
+                    <td class="text-center">
                         <div class="flex items-center justify-center gap-2">
-                            <!-- Open Folder Icon -->
-                            <a href="${row.folderUrl}" target="_blank" title="Open Folder in Drive" class="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition">
-                                <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                            <a href="${row.folderUrl}" target="_blank" title="Open Folder in Drive" class="sura-icon-btn open">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
                             </a>
-                            <!-- Edit/Rename Folder Icon -->
-                            <button onclick="editFolder('${row.folderId}', '${row.workName.replace(/'/g, "\\'")}')" title="Rename Folder" class="p-1.5 text-amber-600 hover:bg-amber-50 rounded-lg transition">
-                                <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                            <button onclick="editFolder('${row.folderId}', '${row.workName.replace(/'/g, "\\'")}')" title="Rename Folder" class="sura-icon-btn edit">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                             </button>
-                            <!-- Delete Folder Icon -->
-                            <button onclick="deleteSingleFolder('${row.folderId}')" title="Delete Folder" class="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition">
-                                <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                            <button onclick="deleteSingleFolder('${row.folderId}')" title="Delete Folder" class="sura-icon-btn del">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                             </button>
                         </div>
                     </td>
@@ -370,7 +695,7 @@
             document.getElementById('nextPageBtn').disabled = currentPage === totalPages || totalPages === 0;
         }
 
-        // Filter functionality for table search box (supports searching by formatted DD-MM-YYYY or work name)
+        // Filter functionality for table search box
         document.getElementById('tableSearchInput').addEventListener('input', function(e) {
             const term = e.target.value.toLowerCase();
             const filteredData = allTableData.filter(row => {
@@ -413,7 +738,7 @@
             checkboxes.forEach(cb => cb.checked = this.checked);
         });
 
-        // Load table data with Client-Side localStorage Caching for instant render
+        // Load table data with Client-Side localStorage Caching
         window.loadTableData = function() {
             const cachedData = localStorage.getItem('workFolderCache');
             if (cachedData) {
@@ -509,7 +834,7 @@
                 () => {
                     startLoading('Deleting selected folders...');
                     let folderIds = Array.from(selectedCheckboxes).map(cb => cb.getAttribute('data-folder-id'));
-                    
+
                     let index = 0;
                     function deleteNext() {
                         if (index >= folderIds.length) {
