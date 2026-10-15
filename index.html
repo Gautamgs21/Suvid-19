@@ -487,12 +487,133 @@
             }
             .sidebar-overlay.active { display: block; }
         }
+
+        /* ============================================================
+           VISUAL POLISH — layout and spacing only, no behaviour changes.
+           (Kept at the end so it safely overrides the rules above.)
+           ============================================================ */
+
+        /* Toasts: sit below the top bar so they never cover the
+           Alert / Profile / Logout buttons, and wrap long text neatly */
+        #toastContainer {
+            top: 72px;
+            right: 16px;
+            align-items: flex-end;
+        }
+        .sura-toast {
+            max-width: min(380px, 90vw);
+            line-height: 1.4;
+            word-break: break-word;
+        }
+
+        /* Login: stays reachable on short screens / with the keyboard open */
+        #loginView { overflow-y: auto; }
+        .login-card { margin: auto; }
+
+        /* Use the real visible height on mobile browsers */
+        #dashboardView {
+            min-height: 100vh;
+            min-height: 100dvh;
+        }
+
+        /* Top bar stays visible while the page scrolls */
+        .topbar {
+            position: sticky;
+            top: 0;
+            z-index: 20;
+        }
+
+        /* Modals: never taller than the screen, always scrollable */
+        .sura-modal {
+            max-height: calc(100vh - 32px);
+            overflow-y: auto;
+        }
+        .profile-row .profile-label { flex-shrink: 0; }
+        .profile-row .profile-value { min-width: 0; }
+        .profile-row .sura-btn-ghost { flex-shrink: 0; }
+
+        /* Sidebar header: icon, title and toggle stay on one line */
+        .sidebar-header .logo-text {
+            min-width: 0;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+        .sidebar-nav { min-height: 0; }
+
+        /* Collapsed sidebar: a clean 64px rail.
+           The toggle button is centred and always reachable; nav icons
+           are centred with no clipped text or hidden gaps. */
+        .sidebar.collapsed .sidebar-header {
+            justify-content: center;
+            gap: 0;
+            padding-left: 0;
+            padding-right: 0;
+        }
+        .sidebar.collapsed .sidebar-header > svg { display: none; }
+        .sidebar.collapsed .sidebar-toggle-btn { margin-left: 0; }
+        .sidebar.collapsed .nav-item {
+            justify-content: center;
+            gap: 0;
+            padding-left: 0;
+            padding-right: 0;
+        }
+        .sidebar.collapsed .nav-item .nav-label { flex: 0 0 0; }
+
+        /* Keyboard focus is visible on sidebar and top bar controls */
+        .nav-item:focus-visible,
+        .topbar-btn:focus-visible,
+        .sidebar-toggle-btn:focus-visible {
+            outline: 2px solid var(--brass);
+            outline-offset: -2px;
+        }
+
+        /* Desktop: sidebar stays in view while the page scrolls */
+        @media (min-width: 641px) {
+            .sidebar {
+                position: sticky;
+                top: 0;
+                align-self: flex-start;
+                height: 100vh;
+                height: 100dvh;
+            }
+        }
+
+        /* Phones */
+        @media (max-width: 640px) {
+            .topbar { padding: 0 12px; }
+            .content-area { padding: 16px; }
+            .login-card { padding: 24px 20px; }
+            .sura-modal { padding: 18px 16px; }
+            #toastContainer {
+                left: 12px;
+                right: 12px;
+                align-items: stretch;
+            }
+            /* The slide-out menu always shows full labels, so the
+               collapsed-rail rules above must not apply here */
+            .sidebar.collapsed .sidebar-header {
+                justify-content: flex-start;
+                gap: 10px;
+                padding-left: 12px;
+                padding-right: 12px;
+            }
+            .sidebar.collapsed .sidebar-header > svg { display: block; }
+            .sidebar.collapsed .nav-item {
+                justify-content: flex-start;
+                gap: 12px;
+                padding-left: 12px;
+                padding-right: 12px;
+            }
+            .sidebar.collapsed .nav-item .nav-label { flex: 0 1 auto; }
+            /* Collapse arrow does nothing on phones, so hide it */
+            .sidebar-toggle-btn { display: none; }
+        }
     </style>
 </head>
 <body>
 
     <!-- Toast Container -->
-    <div id="toastContainer" class="fixed top-5 right-5 z-[200] flex flex-col gap-3 pointer-events-none max-w-[90vw]"></div>
+    <div id="toastContainer" class="fixed z-[200] flex flex-col gap-3 pointer-events-none max-w-[90vw]"></div>
 
     <!-- ==================== LOGIN VIEW ==================== -->
     <div id="loginView">
@@ -535,7 +656,7 @@
             </div>
             <nav class="sidebar-nav">
                 <!-- Home -->
-                <button class="nav-item active" data-page="home" onclick="navigateTo('home')">
+                <button class="nav-item active" data-page="home" onclick="navigateTo('home')" title="Home">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
                     </svg>
@@ -543,7 +664,7 @@
                 </button>
 
                 <!-- Work Folder Management System -->
-                <a href="https://gautamgs21.github.io/Suvid-19/pages/wfms.html" class="nav-item" onclick="return navigateToExternal(event, 'wfms')">
+                <a href="https://gautamgs21.github.io/Suvid-19/pages/wfms.html" class="nav-item" onclick="return navigateToExternal(event, 'wfms')" title="Work Folder Management">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path>
                     </svg>
@@ -552,7 +673,7 @@
 
                 <!-- NEW: File Index Register -->
                 <!-- File Index Register -->
-                <a href="https://gautamgs21.github.io/Suvid-19/pages/file-index.html" class="nav-item" onclick="return navigateToExternal(event, 'fileindex')">
+                <a href="https://gautamgs21.github.io/Suvid-19/pages/file-index.html" class="nav-item" onclick="return navigateToExternal(event, 'fileindex')" title="File Index Register">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                     </svg>
@@ -560,7 +681,7 @@
                 </a>
 
                 <!-- Attendance Monitor System -->
-                <button class="nav-item" data-page="attendance" onclick="navigateTo('attendance')">
+                <button class="nav-item" data-page="attendance" onclick="navigateTo('attendance')" title="Attendance Monitor">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
                     </svg>
@@ -568,7 +689,7 @@
                 </button>
 
                 <!-- Leave Tracking System -->
-                <button class="nav-item" data-page="leave" onclick="navigateTo('leave')">
+                <button class="nav-item" data-page="leave" onclick="navigateTo('leave')" title="Leave Tracking">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                     </svg>
@@ -576,7 +697,7 @@
                 </button>
 
                 <!-- Action Monitoring System -->
-                <button class="nav-item" data-page="action" onclick="navigateTo('action')">
+                <button class="nav-item" data-page="action" onclick="navigateTo('action')" title="Action Monitoring">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
                     </svg>
@@ -590,7 +711,7 @@
             <!-- Top Bar -->
             <header class="topbar">
                 <!-- Mobile menu toggle -->
-                <button class="topbar-btn" id="mobileMenuBtn" style="display:none; margin-right:auto;" onclick="toggleMobileSidebar()">
+                <button class="topbar-btn" id="mobileMenuBtn" style="display:none; margin-right:auto;" onclick="toggleMobileSidebar()" aria-label="Open menu" title="Menu">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
                     </svg>
