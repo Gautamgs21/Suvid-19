@@ -6,7 +6,7 @@
     <title>Suvid-19 Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* ---------- SURA design tokens (copied from wfms.html) ---------- */
+        /* ---------- SURA design tokens ---------- */
         :root {
             --ink: #182233;
             --ink-soft: #4b5768;
@@ -95,18 +95,7 @@
             margin-bottom: 24px;
         }
 
-        /* ---------- SURA components (reused) ---------- */
-        .sura-header {
-            background: var(--ink);
-            color: var(--paper-raised);
-            border-bottom: 2px solid var(--ink);
-        }
-        :root[data-theme="dark"] .sura-header {
-            background: var(--paper-raised);
-            color: var(--ink);
-            border-bottom-color: var(--line);
-        }
-
+        /* ---------- SURA components ---------- */
         .sura-panel {
             background: var(--paper-raised);
             border: 1px solid var(--line);
@@ -143,7 +132,6 @@
         }
 
         .sura-btn-primary {
-            width: 100%;
             background: var(--ink);
             color: var(--paper-raised);
             padding: 10px 14px;
@@ -200,6 +188,84 @@
         .sura-toast.success { background: var(--teal); }
         .sura-toast.error { background: var(--red); }
 
+        /* ---------- MODALS ---------- */
+        .sura-modal-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 90;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+        .sura-modal-backdrop.hidden { display: none; }
+
+        .sura-modal {
+            background: var(--paper-raised);
+            border: 1px solid var(--line);
+            border-radius: 6px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            max-width: 460px;
+            width: 100%;
+            padding: 22px 24px;
+        }
+        .sura-modal h3 {
+            font-size: 17px;
+            color: var(--ink);
+            font-weight: 600;
+            margin-bottom: 14px;
+        }
+        .sura-modal p {
+            color: var(--ink-soft);
+            font-size: 14px;
+            margin-bottom: 18px;
+        }
+
+        /* Profile modal rows */
+        .profile-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--line-soft);
+            font-size: 14px;
+        }
+        .profile-row:last-of-type { border-bottom: none; }
+        .profile-row .profile-label {
+            color: var(--ink-soft);
+            font-weight: 500;
+            min-width: 100px;
+        }
+        .profile-row .profile-value {
+            flex: 1;
+            color: var(--ink);
+            font-weight: 500;
+            word-break: break-word;
+        }
+        .profile-checkbox-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 14px 0 4px;
+            border-bottom: none;
+        }
+        .profile-checkbox-row label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            color: var(--ink);
+            font-size: 14px;
+            font-weight: 500;
+        }
+        .profile-checkbox-row input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            accent-color: var(--brass);
+            cursor: pointer;
+        }
+
         /* ---------- LAYOUT ---------- */
         #dashboardView {
             display: flex;
@@ -224,7 +290,7 @@
         }
 
         .sidebar-header {
-            padding: 16px 14px;
+            padding: 14px 12px;
             border-bottom: 1px solid var(--line-soft);
             display: flex;
             align-items: center;
@@ -236,13 +302,45 @@
             font-weight: 600;
             font-size: 15px;
             color: var(--ink);
+            flex: 1;
             opacity: 1;
             transition: opacity 0.2s ease;
+            overflow: hidden;
         }
         .sidebar.collapsed .logo-text {
             opacity: 0;
             width: 0;
-            overflow: hidden;
+            flex: 0;
+        }
+
+        /* Sidebar header toggle button (NEW) */
+        .sidebar-toggle-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            border-radius: var(--radius);
+            border: 1px solid var(--line);
+            background: transparent;
+            color: var(--ink-soft);
+            cursor: pointer;
+            transition: var(--transition);
+            flex-shrink: 0;
+            margin-left: auto;
+        }
+        .sidebar-toggle-btn:hover {
+            background: var(--paper);
+            color: var(--ink);
+            border-color: var(--ink);
+        }
+        .sidebar-toggle-btn svg {
+            width: 16px;
+            height: 16px;
+            transition: transform 0.3s ease;
+        }
+        .sidebar.collapsed .sidebar-toggle-btn svg {
+            transform: rotate(180deg);
         }
 
         .sidebar-nav {
@@ -251,6 +349,7 @@
             display: flex;
             flex-direction: column;
             gap: 2px;
+            overflow-y: auto;
         }
 
         .nav-item {
@@ -287,11 +386,11 @@
         .nav-item .nav-label {
             opacity: 1;
             transition: opacity 0.2s ease;
+            overflow: hidden;
         }
         .sidebar.collapsed .nav-item .nav-label {
             opacity: 0;
             width: 0;
-            overflow: hidden;
         }
 
         /* Main area */
@@ -333,7 +432,7 @@
             color: var(--ink);
         }
 
-        /* Content area — intentionally empty */
+        /* Content area */
         .content-area {
             flex: 1;
             padding: 24px;
@@ -375,20 +474,10 @@
                 z-index: 50;
                 box-shadow: 4px 0 20px rgba(0,0,0,0.1);
             }
-            .sidebar.mobile-open {
-                transform: translateX(0);
-            }
-            .sidebar.collapsed {
-                width: var(--sidebar-width);
-            }
-            .sidebar.collapsed .nav-item .nav-label {
-                opacity: 1;
-                width: auto;
-            }
-            .sidebar.collapsed .logo-text {
-                opacity: 1;
-                width: auto;
-            }
+            .sidebar.mobile-open { transform: translateX(0); }
+            .sidebar.collapsed { width: var(--sidebar-width); }
+            .sidebar.collapsed .nav-item .nav-label { opacity: 1; width: auto; }
+            .sidebar.collapsed .logo-text { opacity: 1; width: auto; flex: 1; }
             .sidebar-overlay {
                 display: none;
                 position: fixed;
@@ -396,9 +485,7 @@
                 background: rgba(0,0,0,0.4);
                 z-index: 40;
             }
-            .sidebar-overlay.active {
-                display: block;
-            }
+            .sidebar-overlay.active { display: block; }
         }
     </style>
 </head>
@@ -421,7 +508,7 @@
                     <label class="sura-label" for="loginPassword">Password</label>
                     <input type="password" id="loginPassword" class="sura-input" placeholder="Password" required autocomplete="current-password">
                 </div>
-                <button type="submit" id="loginBtn" class="sura-btn-primary" style="margin-top:8px;">Sign In</button>
+                <button type="submit" id="loginBtn" class="sura-btn-primary" style="width:100%; margin-top:8px;">Sign In</button>
             </form>
         </div>
     </div>
@@ -439,6 +526,12 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
                 </svg>
                 <span class="logo-text">Suvid-19</span>
+                <!-- NEW: Sidebar toggle button -->
+                <button id="sidebarToggleBtn" class="sidebar-toggle-btn" title="Toggle Sidebar" aria-label="Toggle Sidebar">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                    </svg>
+                </button>
             </div>
             <nav class="sidebar-nav">
                 <!-- Home -->
@@ -457,7 +550,15 @@
                     <span class="nav-label">Work Folder Mgmt</span>
                 </a>
 
-                <!-- Attendance Monitor System (placeholder) -->
+                <!-- NEW: File Index Register -->
+                <button class="nav-item" data-page="fileindex" onclick="navigateTo('fileindex')">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                    <span class="nav-label">File Index Register</span>
+                </button>
+
+                <!-- Attendance Monitor System -->
                 <button class="nav-item" data-page="attendance" onclick="navigateTo('attendance')">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
@@ -465,7 +566,7 @@
                     <span class="nav-label">Attendance Monitor</span>
                 </button>
 
-                <!-- Leave Tracking System (placeholder) -->
+                <!-- Leave Tracking System -->
                 <button class="nav-item" data-page="leave" onclick="navigateTo('leave')">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
@@ -473,7 +574,7 @@
                     <span class="nav-label">Leave Tracking</span>
                 </button>
 
-                <!-- Action Monitoring System (placeholder) -->
+                <!-- Action Monitoring System -->
                 <button class="nav-item" data-page="action" onclick="navigateTo('action')">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
@@ -481,16 +582,6 @@
                     <span class="nav-label">Action Monitoring</span>
                 </button>
             </nav>
-
-            <!-- Sidebar footer with collapse toggle -->
-            <div style="padding:8px; border-top:1px solid var(--line-soft); margin-top:auto;">
-                <button class="nav-item" onclick="toggleSidebar()" title="Toggle Sidebar">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"></path>
-                    </svg>
-                    <span class="nav-label">Collapse</span>
-                </button>
-            </div>
         </aside>
 
         <!-- Main Area -->
@@ -512,21 +603,21 @@
                 </button>
 
                 <!-- Profile -->
-                <button class="topbar-btn" title="Profile" onclick="showToast('Profile page coming soon.', 'success')">
+                <button class="topbar-btn" id="profileBtn" title="Profile">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                     </svg>
                 </button>
 
                 <!-- Logout -->
-                <button class="topbar-btn" title="Logout" onclick="logout()">
+                <button class="topbar-btn" id="logoutBtn" title="Logout">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
                     </svg>
                 </button>
             </header>
 
-            <!-- Content Area (intentionally empty for future data) -->
+            <!-- Content Area -->
             <main class="content-area">
                 <div class="content-placeholder">
                     Dashboard content will appear here.
@@ -539,17 +630,75 @@
         </div>
     </div>
 
+    <!-- ==================== CONFIRM MODAL (NEW) ==================== -->
+    <div id="confirmModal" class="sura-modal-backdrop hidden">
+        <div class="sura-modal">
+            <h3 id="confirmTitle">Confirm Action</h3>
+            <p id="confirmMessage">Are you sure you want to proceed?</p>
+            <div class="flex justify-end gap-3 pt-2">
+                <button id="confirmCancelBtn" class="sura-btn-ghost">Cancel</button>
+                <button id="confirmOkBtn" class="sura-btn-primary" style="width:auto; padding:8px 18px;">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== PROFILE MODAL (NEW) ==================== -->
+    <div id="profileModal" class="sura-modal-backdrop hidden">
+        <div class="sura-modal">
+            <h3>User Profile</h3>
+
+            <div class="profile-row">
+                <span class="profile-label">User Name</span>
+                <span class="profile-value" id="profileUsernameDisplay">—</span>
+                <button class="sura-btn-ghost" id="editUsernameBtn">Edit</button>
+            </div>
+
+            <div class="profile-row">
+                <span class="profile-label">Password</span>
+                <span class="profile-value" id="profilePasswordDisplay">••••••••</span>
+                <button class="sura-btn-ghost" id="editPasswordBtn">Edit</button>
+            </div>
+
+            <div class="profile-checkbox-row">
+                <label>
+                    <input type="checkbox" id="sessionTimerCheck">
+                    Logout after 10 minutes
+                </label>
+            </div>
+
+            <div class="flex justify-end gap-3 pt-4">
+                <button id="profileCloseBtn" class="sura-btn-primary" style="width:auto; padding:8px 18px;">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== PROMPT MODAL (for editing) ==================== -->
+    <div id="promptModal" class="sura-modal-backdrop hidden">
+        <div class="sura-modal">
+            <h3 id="promptTitle">Edit</h3>
+            <input type="text" id="promptInput" class="sura-input" style="margin-bottom:18px;">
+            <div class="flex justify-end gap-3 pt-2">
+                <button id="promptCancelBtn" class="sura-btn-ghost">Cancel</button>
+                <button id="promptOkBtn" class="sura-btn-primary" style="width:auto; padding:8px 18px;">Save</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         /* ==================================================================
            CONFIGURATION
            ================================================================== */
         const CREDS_URL = "https://raw.githubusercontent.com/Gautamgs21/Suvid-19/main/creds/creds.json";
-        const WFMS_URL = "https://gautamgs21.github.io/Suvid-19/pages/wfms.html";
         const SESSION_KEY = "suvid19_session";
-        const SESSION_EXPIRY_MS = 2 * 60 * 1000; // 2 minutes for sidebar auto-collapse
+        const OVERRIDE_KEY = "suvid19_credentials_override";
+        const SESSION_TIMER_KEY = "suvid19_session_timer_enabled";
+        const SIDEBAR_AUTO_COLLAPSE_MS = 2 * 60 * 1000;   // 2 minutes
+        const SESSION_TIMER_MS = 10 * 60 * 1000;          // 10 minutes
+
+        let sessionTimerHandle = null;
 
         /* ==================================================================
-           TOAST SYSTEM (copied from wfms.html)
+           TOAST SYSTEM
            ================================================================== */
         function showToast(message, type = 'success') {
             const container = document.getElementById('toastContainer');
@@ -562,6 +711,89 @@
                 toast.classList.remove('show');
                 setTimeout(() => toast.remove(), 300);
             }, 3500);
+        }
+
+        /* ==================================================================
+           CONFIRM MODAL
+           ================================================================== */
+        function showConfirmModal(title, message, onConfirm) {
+            const modal = document.getElementById('confirmModal');
+            document.getElementById('confirmTitle').textContent = title;
+            document.getElementById('confirmMessage').textContent = message;
+            modal.classList.remove('hidden');
+
+            const okBtn = document.getElementById('confirmOkBtn');
+            const cancelBtn = document.getElementById('confirmCancelBtn');
+
+            const close = () => {
+                modal.classList.add('hidden');
+                okBtn.replaceWith(okBtn.cloneNode(true));
+                cancelBtn.replaceWith(cancelBtn.cloneNode(true));
+                // re-bind for next time via closures below
+            };
+
+            document.getElementById('confirmOkBtn').addEventListener('click', () => {
+                close();
+                if (onConfirm) onConfirm();
+            }, { once: true });
+            document.getElementById('confirmCancelBtn').addEventListener('click', close, { once: true });
+        }
+
+        /* ==================================================================
+           PROMPT MODAL
+           ================================================================== */
+        function showPromptModal(title, defaultValue, inputType, onSave) {
+            const modal = document.getElementById('promptModal');
+            document.getElementById('promptTitle').textContent = title;
+            const input = document.getElementById('promptInput');
+            input.value = defaultValue || '';
+            input.type = inputType || 'text';
+            modal.classList.remove('hidden');
+            input.focus();
+            input.select();
+
+            const okBtn = document.getElementById('promptOkBtn');
+            const cancelBtn = document.getElementById('promptCancelBtn');
+
+            const close = () => {
+                modal.classList.add('hidden');
+                input.type = 'text';
+                okBtn.replaceWith(okBtn.cloneNode(true));
+                cancelBtn.replaceWith(cancelBtn.cloneNode(true));
+            };
+
+            const submit = () => {
+                const val = input.value.trim();
+                if (!val) {
+                    showToast('Value cannot be empty.', 'error');
+                    return;
+                }
+                close();
+                onSave(val);
+            };
+
+            document.getElementById('promptOkBtn').addEventListener('click', submit, { once: true });
+            document.getElementById('promptCancelBtn').addEventListener('click', close, { once: true });
+            input.addEventListener('keydown', function onKey(e) {
+                if (e.key === 'Enter') {
+                    input.removeEventListener('keydown', onKey);
+                    submit();
+                }
+            });
+        }
+
+        /* ==================================================================
+           CREDENTIAL HELPERS
+           ================================================================== */
+        function getCredentialOverride() {
+            try {
+                const raw = localStorage.getItem(OVERRIDE_KEY);
+                return raw ? JSON.parse(raw) : null;
+            } catch { return null; }
+        }
+
+        function saveCredentialOverride(override) {
+            localStorage.setItem(OVERRIDE_KEY, JSON.stringify(override));
         }
 
         /* ==================================================================
@@ -582,12 +814,25 @@
             btn.textContent = 'Authenticating...';
 
             try {
-                const res = await fetch(CREDS_URL, { cache: 'no-store' });
-                if (!res.ok) throw new Error('Network response was not ok');
-                const creds = await res.json();
+                // Check override first (edited credentials take priority)
+                const override = getCredentialOverride();
+                let users = [];
+                if (override) users.push(override);
 
-                // Support both single-user and array-of-users formats
-                const users = Array.isArray(creds) ? creds : [creds];
+                try {
+                    const res = await fetch(CREDS_URL, { cache: 'no-store' });
+                    if (res.ok) {
+                        const creds = await res.json();
+                        const baseUsers = Array.isArray(creds) ? creds : [creds];
+                        users = users.concat(baseUsers);
+                    }
+                } catch (_) { /* network failure is fine if override exists */ }
+
+                if (users.length === 0) {
+                    showToast('Could not load credentials. Check the creds.json URL.', 'error');
+                    return;
+                }
+
                 const user = users.find(u =>
                     (u.username || u.user || u.email || '').toLowerCase() === username.toLowerCase() &&
                     (u.password || u.pass || '') === password
@@ -607,7 +852,7 @@
                 }
             } catch (err) {
                 console.error('Login error:', err);
-                showToast('Could not load credentials. Check the creds.json URL.', 'error');
+                showToast('Login failed.', 'error');
             } finally {
                 btn.disabled = false;
                 btn.textContent = 'Sign In';
@@ -620,30 +865,53 @@
             try {
                 const session = JSON.parse(raw);
                 if (!session || !session.token) return null;
-                // Optional: expire session after 24 hours
                 if (Date.now() - session.createdAt > 24 * 60 * 60 * 1000) {
                     localStorage.removeItem(SESSION_KEY);
                     return null;
                 }
                 return session;
-            } catch {
-                return null;
-            }
+            } catch { return null; }
         }
 
         function requireAuth() {
-            const session = checkSession();
-            if (!session) {
-                showLogin();
-                return false;
-            }
-            return true;
+            return !!checkSession();
         }
 
-        function logout() {
+        function logout(silent) {
             localStorage.removeItem(SESSION_KEY);
-            showToast('Logged out successfully.', 'success');
+            if (sessionTimerHandle) {
+                clearTimeout(sessionTimerHandle);
+                sessionTimerHandle = null;
+            }
+            if (!silent) showToast('Logged out successfully.', 'success');
             showLogin();
+        }
+
+        /* ==================================================================
+           SESSION TIMER (10-minute auto-logout)
+           ================================================================== */
+        function startSessionTimer() {
+            if (sessionTimerHandle) clearTimeout(sessionTimerHandle);
+            sessionTimerHandle = setTimeout(() => {
+                showToast('Session expired. Logging out.', 'error');
+                logout(true);
+            }, SESSION_TIMER_MS);
+        }
+
+        function stopSessionTimer() {
+            if (sessionTimerHandle) {
+                clearTimeout(sessionTimerHandle);
+                sessionTimerHandle = null;
+            }
+        }
+
+        function applySessionTimer() {
+            const enabled = localStorage.getItem(SESSION_TIMER_KEY) === 'true';
+            const check = document.getElementById('sessionTimerCheck');
+            if (check) check.checked = enabled;
+
+            if (enabled) startSessionTimer();
+            else stopSessionTimer();
         }
 
         /* ==================================================================
@@ -660,6 +928,8 @@
             document.getElementById('loginView').style.display = 'none';
             document.getElementById('dashboardView').style.display = 'flex';
             resetSidebarTimer();
+            applySessionTimer();
+            refreshProfileDisplay();
         }
 
         /* ==================================================================
@@ -669,26 +939,22 @@
         let sidebarCollapsed = false;
         let sidebarTimer = null;
 
+        function setSidebarCollapsed(collapsed) {
+            sidebarCollapsed = collapsed;
+            sidebar.classList.toggle('collapsed', collapsed);
+        }
+
         function toggleSidebar() {
-            sidebarCollapsed = !sidebarCollapsed;
-            if (sidebarCollapsed) {
-                sidebar.classList.add('collapsed');
-            } else {
-                sidebar.classList.remove('collapsed');
-            }
+            setSidebarCollapsed(!sidebarCollapsed);
             resetSidebarTimer();
         }
 
         function resetSidebarTimer() {
-            // Only auto-collapse on desktop (not mobile overlay mode)
             if (window.innerWidth <= 640) return;
             if (sidebarTimer) clearTimeout(sidebarTimer);
             sidebarTimer = setTimeout(() => {
-                if (!sidebarCollapsed) {
-                    sidebarCollapsed = true;
-                    sidebar.classList.add('collapsed');
-                }
-            }, SESSION_EXPIRY_MS);
+                if (!sidebarCollapsed) setSidebarCollapsed(true);
+            }, SIDEBAR_AUTO_COLLAPSE_MS);
         }
 
         function toggleMobileSidebar() {
@@ -701,12 +967,17 @@
             document.getElementById('sidebarOverlay').classList.remove('active');
         });
 
-        // Reset timer on user activity within sidebar
+        // NEW: dedicated sidebar toggle button
+        document.getElementById('sidebarToggleBtn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleSidebar();
+        });
+
+        // Reset timer on sidebar interaction
         sidebar.addEventListener('mouseenter', resetSidebarTimer);
         sidebar.addEventListener('mousemove', resetSidebarTimer);
         sidebar.addEventListener('click', resetSidebarTimer);
 
-        // Responsive: show/hide mobile menu button
         function handleResize() {
             const btn = document.getElementById('mobileMenuBtn');
             if (window.innerWidth <= 640) {
@@ -718,32 +989,26 @@
             }
         }
         window.addEventListener('resize', handleResize);
-        handleResize();
 
         /* ==================================================================
            NAVIGATION
            ================================================================== */
         function navigateTo(page) {
-            // For now, only Home is active; others are placeholders
             document.querySelectorAll('.nav-item[data-page]').forEach(el => {
                 el.classList.toggle('active', el.dataset.page === page);
             });
 
             const content = document.querySelector('.content-placeholder');
-            if (page === 'home') {
-                content.textContent = 'Dashboard content will appear here.';
-            } else if (page === 'attendance') {
-                content.textContent = 'Attendance Monitor System — coming soon.';
-            } else if (page === 'leave') {
-                content.textContent = 'Leave Tracking System — coming soon.';
-            } else if (page === 'action') {
-                content.textContent = 'Action Monitoring System — coming soon.';
-            }
+            if (page === 'home') content.textContent = 'Dashboard content will appear here.';
+            else if (page === 'fileindex') content.textContent = 'File Index Register — coming soon.';
+            else if (page === 'attendance') content.textContent = 'Attendance Monitor System — coming soon.';
+            else if (page === 'leave') content.textContent = 'Leave Tracking System — coming soon.';
+            else if (page === 'action') content.textContent = 'Action Monitoring System — coming soon.';
+
             resetSidebarTimer();
         }
 
         function navigateToExternal(e, page) {
-            // Check authentication before allowing external navigation
             if (!checkSession()) {
                 e.preventDefault();
                 showToast('Please log in first.', 'error');
@@ -755,16 +1020,95 @@
         }
 
         /* ==================================================================
+           PROFILE
+           ================================================================== */
+        function refreshProfileDisplay() {
+            const session = checkSession();
+            const override = getCredentialOverride();
+            const username = (override && override.username) || (session && session.username) || '—';
+            document.getElementById('profileUsernameDisplay').textContent = username;
+            document.getElementById('profilePasswordDisplay').textContent = '••••••••';
+        }
+
+        document.getElementById('profileBtn').addEventListener('click', () => {
+            refreshProfileDisplay();
+            applySessionTimer();
+            document.getElementById('profileModal').classList.remove('hidden');
+        });
+
+        document.getElementById('profileCloseBtn').addEventListener('click', () => {
+            document.getElementById('profileModal').classList.add('hidden');
+        });
+
+        // Edit Username
+        document.getElementById('editUsernameBtn').addEventListener('click', () => {
+            const override = getCredentialOverride() || {};
+            const current = override.username ||
+                (checkSession() && checkSession().username) || '';
+            showPromptModal('Edit User Name', current, 'text', (newVal) => {
+                const updated = getCredentialOverride() || {};
+                updated.username = newVal;
+                if (updated.password === undefined) updated.password = '';
+                saveCredentialOverride(updated);
+
+                // Also refresh the active session's username
+                const s = checkSession();
+                if (s) {
+                    s.username = newVal;
+                    localStorage.setItem(SESSION_KEY, JSON.stringify(s));
+                }
+                refreshProfileDisplay();
+                showToast('User name updated.', 'success');
+            });
+        });
+
+        // Edit Password
+        document.getElementById('editPasswordBtn').addEventListener('click', () => {
+            showPromptModal('Edit Password', '', 'password', (newVal) => {
+                const updated = getCredentialOverride() || {};
+                if (updated.username === undefined) {
+                    const s = checkSession();
+                    updated.username = (s && s.username) || '';
+                }
+                updated.password = newVal;
+                saveCredentialOverride(updated);
+                showToast('Password updated.', 'success');
+            });
+        });
+
+        // Session timer checkbox
+        document.getElementById('sessionTimerCheck').addEventListener('change', function () {
+            const enabled = this.checked;
+            localStorage.setItem(SESSION_TIMER_KEY, enabled ? 'true' : 'false');
+            if (enabled) {
+                startSessionTimer();
+                showToast('Auto-logout enabled (10 minutes).', 'success');
+            } else {
+                stopSessionTimer();
+                showToast('Auto-logout disabled.', 'success');
+            }
+        });
+
+        /* ==================================================================
+           LOGOUT
+           ================================================================== */
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            showConfirmModal(
+                'Confirm Logout',
+                'Are you sure you want to logout?',
+                () => logout(false)
+            );
+        });
+
+        /* ==================================================================
            INITIALISATION
            ================================================================== */
         document.getElementById('loginForm').addEventListener('submit', handleLogin);
+        handleResize();
 
         window.addEventListener('DOMContentLoaded', () => {
-            if (requireAuth()) {
-                showDashboard();
-            } else {
-                showLogin();
-            }
+            if (requireAuth()) showDashboard();
+            else showLogin();
         });
     </script>
 </body>
