@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Index Register</title>
+
+    <!-- ============================================================
+         AUTH GUARD — runs before anything renders.
+         ============================================================ -->
+    <style>html { visibility: hidden; }</style>
+    <script>
+    (function () {
+        var SESSION_KEY = 'suvid19_session';
+        var LOGIN_URL   = 'https://gautamgs21.github.io/Suvid-19/';
+        var MAX_AGE_MS  = 24 * 60 * 60 * 1000;
+        try {
+            var raw = localStorage.getItem(SESSION_KEY);
+            if (!raw) throw new Error('no-session');
+            var s = JSON.parse(raw);
+            if (!s || !s.token) throw new Error('invalid-session');
+            if (Date.now() - (s.createdAt || 0) > MAX_AGE_MS) {
+                localStorage.removeItem(SESSION_KEY);
+                throw new Error('expired');
+            }
+            document.documentElement.style.visibility = 'visible';
+        } catch (e) {
+            window.location.replace(LOGIN_URL);
+        }
+    })();
+    </script>
+    <!-- ===================== END AUTH GUARD ===================== -->
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* ---------- design tokens (match wfms.html) ---------- */
+        :root {
+            --ink: #182233;
+            --ink-soft: #4b5768;
+            --paper: #F5F3EE;
+            --paper-raised: #FBFAF6;
+            --line: #CBD0C7;
+            --line-soft: #DDE0D9;
+            --brass: #9C7327;
+            --brass-soft: #EFE3C8;
+            --teal: #2C6357;
+            --teal-soft: #DEEAE5;
+            --red: #9C3B31;
+            --red-soft: #F3DEDA;
+            --green: #2E7D32;
+            --font-sans: "Aptos Display", -apple-system, "Segoe UI", sans-serif;
+            --radius: 4px;
+            --shadow-card: 0 1px 3px rgba(0,0,0,0.03);
+            --transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+        }
+
+        :root[data-theme="dark"] {
+            --ink: #E9ECE6;
+            --ink-soft: #AEB6A8;
+            --paper: #161B15;
+            --paper-raised: #1E241C;
+            --line: #333B30;
+            --line-soft: #2A3128;
+            --brass: #D4A94B;
+            --brass-soft: #332A16;
+            --teal: #7FBDA9;
+            --teal-soft: #1B2C26;
+            --red: #D98A7C;
+            --red-soft: #3A211D;
+            --green: #6FCF77;
+            --shadow-card: 0 1px 3px rgba(0,0,0,0.4);
+        }
+
+        html, body { height: 100%; }
+
+        body {
+            font-family: var(--font-sans);
+            font-weight: 400;
+            background: var(--paper);
+            color: var(--ink);
+            transition: var(--transition);
+            -webkit-font-smoothing: antialiased;
+        }
+
+        input, textarea, button, table, select {
+            font-weight: 400;
+            font-family: var(--font-sans);
+        }
+        label, h1, h2, th { font-weight: 600; }
+
+        #toastContainer { transition: all 0.3s ease-in-out; }
+
+        .loader {
+            width: 60px;
+            aspect-ratio: 1;
+            background:
+                linear-gradient(45deg,#60B99A 50%,#0000 0),
+                linear-gradient(45deg,#0000 50%,#60B99A 0),
+                linear-gradient(-45deg,#f77825 50%,#0000 0),
+                linear-gradient(-45deg,#0000 50%,#f77825 0),
+                linear-gradient(#554236 0 0);
+            background-size: 50% 50%;
+            background-repeat: no-repeat;
+            animation: l18 1.5s infinite;
+        }
+        @keyframes l18{
+            0%   {background-position:50% 50%,50% 50%,50%  50% ,50% 50%,50% 50%}
+            25%  {background-position:0  100%,100%  0,50%  50% ,50% 50%,50% 50%}
+            50%  {background-position:0  100%,100%  0,100% 100%,0   0  ,50% 50%}
+            75%  {background-position:50% 50%,50% 50%,100% 100%,0   0  ,50% 50%}
+            100% {background-position:50% 50%,50% 50%,50%  50% ,50% 50%,50% 50%}
+        }
+
+        .sura-header {
+            background: var(--ink);
+            color: var(--paper-raised);
+            border-bottom: 2px solid var(--ink);
+        }
+        :root[data-theme="dark"] .sura-header {
+            background: var(--paper-raised);
+            color: var(--ink);
+            border-bottom-color: var(--line);
+        }
+
+        .header-back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 3px;
+            border: 1px solid rgba(255, 255, 255, 0.28);
+            background: transparent;
+            color: var(--paper-raised);
+            font-size: 13px;
+            font-weight: 500;
+            text-decoration: none;
+            white-space: nowrap;
+            transition: var(--transition);
+            cursor: pointer;
+        }
+        .header-back-btn:hover {
+            background: rgba(255, 255, 255, 0.12);
+            border-color: rgba(255, 255, 255, 0.55);
+        }
+        :root[data-theme="dark"] .header-back-btn {
+            color: var(--ink);
+            border-color: var(--line);
+        }
+        :root[data-theme="dark"] .header-back-btn:hover {
+            background: var(--paper);
+            border-color: var(--ink);
+        }
+        .header-back-btn svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+        .sura-panel {
+            background: var(--paper-raised);
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-card);
+            transition: var(--transition);
+        }
+        .sura-panel h2 {
+            font-family: var(--font-sans);
+            color: var(--ink);
+            border-bottom: 1px solid var(--line-soft);
+            padding-bottom: 12px;
+            margin-bottom: 16px;
+            font-size: 17px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .sura-panel h2 svg { color: var(--brass); flex-shrink: 0; }
+
+        .sura-label {
+            display: block;
+            text-transform: uppercase;
+            color: var(--ink-soft);
+            font-size: 12px;
+            margin-bottom: 4px;
+            letter-spacing: 0.03em;
+            font-weight: 500;
+        }
+
+        .sura-input {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid var(--line);
+            border-radius: 3px;
+            background: var(--paper);
+            color: var(--ink);
+            font-size: 14px;
+            transition: var(--transition);
+            outline: none;
+        }
+        .sura-input:focus {
+            outline: 2px solid var(--brass);
+            outline-offset: 1px;
+            border-color: var(--brass);
+        }
+        .sura-input::placeholder { color: var(--ink-soft); opacity: 0.6; }
+        .sura-input[readonly] { background: var(--line-soft); cursor: not-allowed; }
+
+        .sura-btn-primary {
+            width: 100%;
+            background: var(--ink);
+            color: var(--paper-raised);
+            padding: 10px 14px;
+            border: none;
+            border-radius: 3px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            letter-spacing: 0.01em;
+            transition: var(--transition);
+        }
+        .sura-btn-primary:hover:not(:disabled) { background: var(--brass); color: #1a1200; }
+        .sura-btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+        :root[data-theme="dark"] .sura-btn-primary { background: var(--brass); color: #1a1200; }
+        :root[data-theme="dark"] .sura-btn-primary:hover:not(:disabled) {
+            background: var(--ink); color: var(--paper-raised);
+        }
+
+        .sura-btn-ghost {
+            background: transparent;
+            color: var(--ink-soft);
+            border: 1px solid var(--line);
+            border-radius: 3px;
+            padding: 7px 12px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .sura-btn-ghost:hover:not(:disabled) { border-color: var(--ink); color: var(--ink); }
+        .sura-btn-ghost:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .sura-table { width: 100%; border-collapse: collapse; }
+        .sura-table thead th {
+            background: var(--paper);
+            color: var(--ink-soft);
+            text-transform: uppercase;
+            font-size: 11px;
+            letter-spacing: 0.05em;
+            font-weight: 600;
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--ink);
+            text-align: left;
+        }
+        .sura-table tbody td {
+            padding: 10px 12px;
+            font-size: 13px;
+            border-bottom: 1px solid var(--line-soft);
+            color: var(--ink);
+            vertical-align: middle;
+        }
+        .sura-table tbody tr:hover { background: var(--paper); }
+        .sura-table .sl-no { color: var(--ink-soft); font-weight: 500; }
+
+        .sura-toast {
+            padding: 12px 20px;
+            border-radius: 4px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+            font-size: 14px;
+            font-weight: 500;
+            pointer-events: auto;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #fff;
+            opacity: 0;
+            transform: translateY(8px);
+            transition: all 0.3s ease;
+        }
+        .sura-toast.show { opacity: 1; transform: translateY(0); }
+        .sura-toast.success { background: var(--teal); }
+        .sura-toast.error   { background: var(--red); }
+
+        .sura-footer {
+            background: var(--paper-raised);
+            border-top: 1px solid var(--line);
+            color: var(--ink-soft);
+            text-align: center;
+            padding: 12px 16px;
+            font-size: 12px;
+        }
+
+        .sura-search-wrap { position: relative; display: inline-block; }
+        .sura-search-wrap input { padding-left: 32px; }
+        .sura-search-wrap svg {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--ink-soft);
+            pointer-events: none;
+        }
+
+        :root[data-theme="dark"] #loadingOverlay {
+            background: rgba(30, 36, 28, 0.95) !important;
+        }
+        :root[data-theme="dark"] #loadingStatusText {
+            color: var(--ink-soft) !important;
+        }
+
+        /* Full-width layout */
+        .app-container {
+            width: 100%;
+            max-width: 100%;
+            margin: 0;
+            padding-left: 24px;
+            padding-right: 24px;
+        }
+        .header-inner {
+            width: 100%;
+            max-width: 100%;
+            margin: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            padding-left: 24px;
+            padding-right: 24px;
+            padding-top: 0.75rem;
+            padding-bottom: 0.75rem;
+        }
+        @media (min-width: 640px) {
+            .header-inner { padding-top: 1rem; padding-bottom: 1rem; }
+        }
+        @media (max-width: 640px) {
+            .app-container, .header-inner { padding-left: 12px; padding-right: 12px; }
+        }
+
+        main.app-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1rem;
+            padding-top: 1rem;
+            padding-bottom: 1.5rem;
+            flex-grow: 1;
+        }
+        @media (min-width: 1024px) {
+            main.app-container {
+                grid-template-columns: repeat(12, 1fr);
+                gap: 1.5rem;
+            }
+        }
+
+        .max-w-7xl {
+            max-width: 100% !important;
+            width: 100% !important;
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+        }
+
+        .filter-bar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px;
+        }
+        .filter-bar .sura-input {
+            padding-top: 6px;
+            padding-bottom: 6px;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col relative overflow-x-hidden text-sm sm:text-base lg:text-lg">
+
+    <div id="toastContainer" class="fixed top-5 right-5 z-50 flex flex-col gap-3 pointer-events-none max-w-[90vw]"></div>
+
+    <!-- Header -->
+    <header class="sura-header shadow-md">
+        <div class="header-inner">
+            <div class="flex items-center gap-3 min-w-0 flex-1">
+                <a href="https://gautamgs21.github.io/Suvid-19/" class="header-back-btn" title="Back to Dashboard">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                    </svg>
+                    <span class="hidden sm:inline">Back to Dashboard</span>
+                    <span class="sm:hidden">Back</span>
+                </a>
+                <h1 class="text-xl sm:text-2xl lg:text-3xl tracking-wide truncate" style="font-weight:600;">File Index Register</h1>
+            </div>
+        </div>
+    </header>
+
+    <main class="app-container flex-grow">
+
+        <!-- LEFT: Form -->
+        <div class="lg:col-span-4 flex flex-col gap-4 sm:gap-6">
+            <div class="sura-panel p-4 sm:p-6">
+                <h2>
+                    <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                    </svg>
+                    Create File Index Entry
+                </h2>
+
+                <form id="fileIndexForm" class="space-y-3 sm:space-y-4" autocomplete="off">
+                    <div>
+                        <label class="sura-label">Date of Creation</label>
+                        <input type="date" id="dateOfCreation" required class="sura-input">
+                    </div>
+                    <div>
+                        <label class="sura-label">Physical File Number</label>
+                        <input type="text" id="fileNumber" placeholder="e.g., 2026/SUC/042" required class="sura-input">
+                    </div>
+                    <div>
+                        <label class="sura-label">E-File Number (Auto-generated)</label>
+                        <input type="text" id="eFileNumberPreview" class="sura-input" readonly value="EF-0001">
+                    </div>
+                    <div>
+                        <label class="sura-label">File Name</label>
+                        <input type="text" id="fileName" placeholder="e.g., SUC Assessment — Bharti Airtel" required class="sura-input">
+                    </div>
+                    <button type="submit" id="submitBtn" class="sura-btn-primary">
+                        Create File Index Entry
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- RIGHT: Viewer -->
+        <div class="lg:col-span-8 flex flex-col gap-4 min-w-0">
+            <div class="sura-panel p-4 sm:p-6 flex-grow flex flex-col min-w-0">
+
+                <div class="flex flex-col gap-3 pb-3 sm:pb-4 border-b" style="border-color:var(--line-soft);">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                        <h2 class="text-base sm:text-lg lg:text-xl" style="border:none; padding:0; margin:0; font-weight:600; color:var(--ink);">File Index Viewer</h2>
+                        <button id="refreshBtn" class="sura-btn-ghost shrink-0">Refresh</button>
+                    </div>
+
+                    <div class="filter-bar">
+                        <div class="sura-search-wrap flex-1 min-w-[180px]">
+                            <input type="text" id="searchInput" placeholder="Search E-File, File No, or Name..."
+                                   class="sura-input" style="padding-top:6px; padding-bottom:6px;">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                            </svg>
+                        </div>
+                        <input type="date" id="dateFilter" class="sura-input" style="width:auto;" title="Filter by Date of Creation">
+                        <button id="clearFiltersBtn" class="sura-btn-ghost">Clear</button>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto flex-grow mt-3 sm:mt-4 relative min-h-[250px] sm:min-h-[300px] w-full">
+                    <div id="loadingOverlay" class="absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 transition-opacity duration-300"
+                         style="background: rgba(251, 250, 246, 0.95); backdrop-filter: blur(4px);">
+                        <div class="relative flex items-center justify-center">
+                            <div class="loader"></div>
+                            <span id="loadingPercentage" class="absolute font-bold text-white drop-shadow text-xs">0%</span>
+                        </div>
+                        <span id="loadingStatusText" class="font-semibold text-center px-4 text-sm sm:text-base" style="color: var(--ink-soft);">Loading from Database...</span>
+                    </div>
+
+                    <table class="sura-table min-w-[600px]">
+                        <thead>
+                            <tr>
+                                <th class="w-14">Sl No</th>
+                                <th class="w-32">E-File Number</th>
+                                <th class="w-40">File Number</th>
+                                <th>File Name</th>
+                                <th class="w-32">Date of Creation</th>
+                            </tr>
+                        </thead>
+                        <tbody id="fileIndexTableBody" class="divide-y" style="border-color: var(--line-soft);">
+                        </tbody>
+                    </table>
+                </div>
+
+                <div id="paginationContainer" class="flex flex-col sm:flex-row justify-between items-center pt-3 sm:pt-4 border-t mt-3 sm:mt-4 gap-3 text-sm sm:text-base"
+                     style="border-color: var(--line-soft); color: var(--ink-soft);">
+                    <span id="paginationInfo">Showing 0-0 of 0 entries</span>
+                    <div class="flex gap-2 w-full sm:w-auto justify-between sm:justify-end">
+                        <button id="prevPageBtn" class="sura-btn-ghost flex-1 sm:flex-initial text-center" disabled>Previous</button>
+                        <button id="nextPageBtn" class="sura-btn-ghost flex-1 sm:flex-initial text-center" disabled>Next</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="sura-footer">
+        File Index Register &middot; Connected to work_database
+    </footer>
+
+    <script>
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxUvgiK-Iih8Vgh5F8-e7HiXAJHszCzFDNzwS9xMH9tS0EJBh4hJVH99jpsyajPUJZc/exec";
+
+        let allData = [];
+        let currentPage = 1;
+        const rowsPerPage = 20;
+
+        /* ---------- Helpers ---------- */
+        function formatDateForDisplay(dateStr) {
+            if (!dateStr) return '';
+            const clean = dateStr.includes('T') ? dateStr.split('T')[0] : dateStr;
+            const p = clean.split('-');
+            return p.length === 3 ? `${p[2]}-${p[1]}-${p[0]}` : clean;
+        }
+
+        function todayISO() {
+            const d = new Date();
+            const yyyy = d.getFullYear();
+            const mm = String(d.getMonth() + 1).padStart(2, '0');
+            const dd = String(d.getDate()).padStart(2, '0');
+            return `${yyyy}-${mm}-${dd}`;
+        }
+
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `sura-toast ${type}`;
+            toast.innerHTML = `<span>${message}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => toast.classList.add('show'), 10);
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
+
+        /* ---------- Loading overlay ---------- */
+        let progressInterval = null;
+        function startLoading(msg) {
+            const overlay = document.getElementById('loadingOverlay');
+            const pct = document.getElementById('loadingPercentage');
+            const txt = document.getElementById('loadingStatusText');
+            overlay.classList.remove('hidden', 'opacity-0');
+            txt.textContent = msg;
+            let cur = 20;
+            pct.textContent = cur + '%';
+            if (progressInterval) clearInterval(progressInterval);
+            progressInterval = setInterval(() => {
+                if (cur < 95) {
+                    cur += Math.floor(Math.random() * 10) + 5;
+                    if (cur > 95) cur = 95;
+                    pct.textContent = cur + '%';
+                }
+            }, 100);
+        }
+        function stopLoading(cb) {
+            if (progressInterval) clearInterval(progressInterval);
+            const overlay = document.getElementById('loadingOverlay');
+            const pct = document.getElementById('loadingPercentage');
+            const txt = document.getElementById('loadingStatusText');
+            pct.textContent = '100%';
+            txt.textContent = 'Complete!';
+            setTimeout(() => {
+                overlay.classList.add('opacity-0');
+                setTimeout(() => {
+                    overlay.classList.add('hidden');
+                    if (cb) cb();
+                }, 200);
+            }, 200);
+        }
+
+        /* ---------- E-file number preview ---------- */
+        function computeNextEFileNumber(data) {
+            let max = 0;
+            data.forEach(row => {
+                const m = (row.eFileNumber || '').match(/EF-(\d+)/i);
+                if (m) {
+                    const n = parseInt(m[1], 10);
+                    if (n > max) max = n;
+                }
+            });
+            return 'EF-' + String(max + 1).padStart(4, '0');
+        }
+        function updateEFilePreview() {
+            document.getElementById('eFileNumberPreview').value = computeNextEFileNumber(allData);
+        }
+
+        /* ---------- Filtering + sorting ---------- */
+        function getFilteredData() {
+            const term = document.getElementById('searchInput').value.trim().toLowerCase();
+            const dateFilter = document.getElementById('dateFilter').value;
+
+            return allData.filter(row => {
+                const matchesTerm = !term ||
+                    (row.eFileNumber || '').toLowerCase().includes(term) ||
+                    (row.fileNumber  || '').toLowerCase().includes(term) ||
+                    (row.fileName    || '').toLowerCase().includes(term);
+                const matchesDate = !dateFilter || (row.dateOfCreation === dateFilter);
+                return matchesTerm && matchesDate;
+            });
+        }
+
+        /* ---------- Render table ---------- */
+        function renderTable() {
+            const tbody = document.getElementById('fileIndexTableBody');
+            const data = getFilteredData();
+            tbody.innerHTML = '';
+
+            if (data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center" style="color: var(--ink-soft);">No entries found.</td></tr>`;
+                document.getElementById('paginationInfo').textContent = 'Showing 0-0 of 0 entries';
+                document.getElementById('prevPageBtn').disabled = true;
+                document.getElementById('nextPageBtn').disabled = true;
+                return;
+            }
+
+            const totalPages = Math.ceil(data.length / rowsPerPage);
+            if (currentPage > totalPages) currentPage = totalPages;
+            if (currentPage < 1) currentPage = 1;
+
+            const startIdx = (currentPage - 1) * rowsPerPage;
+            const endIdx = startIdx + rowsPerPage;
+            const pageData = data.slice(startIdx, endIdx);
+
+            pageData.forEach((row, i) => {
+                const sl = startIdx + i + 1;
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="sl-no">${sl}</td>
+                    <td style="font-weight:600; color:var(--brass); white-space:nowrap;">${row.eFileNumber || ''}</td>
+                    <td style="white-space:nowrap;">${row.fileNumber || ''}</td>
+                    <td style="color:var(--ink); word-break:break-word;">${row.fileName || ''}</td>
+                    <td style="color:var(--ink-soft); white-space:nowrap;">${formatDateForDisplay(row.dateOfCreation)}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('paginationInfo').textContent =
+                `Showing ${startIdx + 1}-${Math.min(endIdx, data.length)} of ${data.length} entries`;
+            document.getElementById('prevPageBtn').disabled = currentPage === 1;
+            document.getElementById('nextPageBtn').disabled = currentPage === totalPages;
+        }
+
+        /* ---------- Load data ---------- */
+        window.loadFileIndexData = function () {
+            startLoading('Loading File Index...');
+            const old = document.getElementById('jsonpFileIndex');
+            if (old) old.remove();
+            const s = document.createElement('script');
+            s.id = 'jsonpFileIndex';
+            s.src = `${SCRIPT_URL}?action=getFileIndex&callback=handleFileIndexData&_=${Date.now()}`;
+            document.body.appendChild(s);
+        };
+
+        window.handleFileIndexData = function (data) {
+            stopLoading(() => {
+                // Sort: latest Date of Creation first, then E-File number descending
+                data.sort((a, b) => {
+                    const dA = (a.dateOfCreation || '').replace(/-/g, '');
+                    const dB = (b.dateOfCreation || '').replace(/-/g, '');
+                    if (dA !== dB) return dB.localeCompare(dA);
+                    return (b.eFileNumber || '').localeCompare(a.eFileNumber || '');
+                });
+                allData = data;
+                updateEFilePreview();
+                renderTable();
+            });
+        };
+
+        /* ---------- Create entry ---------- */
+        document.getElementById('fileIndexForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+            const btn = document.getElementById('submitBtn');
+            const fileNumber = document.getElementById('fileNumber').value.trim();
+            const fileName = document.getElementById('fileName').value.trim();
+            const dateOfCreation = document.getElementById('dateOfCreation').value || todayISO();
+
+            if (!fileNumber || !fileName) {
+                showToast('Please fill all required fields.', 'error');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = 'Creating...';
+            startLoading('Creating File Index Entry...');
+
+            const old = document.getElementById('jsonpCreate');
+            if (old) old.remove();
+            const s = document.createElement('script');
+            s.id = 'jsonpCreate';
+            s.src = `${SCRIPT_URL}?action=createFileIndex`
+                  + `&fileNumber=${encodeURIComponent(fileNumber)}`
+                  + `&fileName=${encodeURIComponent(fileName)}`
+                  + `&dateOfCreation=${encodeURIComponent(dateOfCreation)}`
+                  + `&callback=handleCreateResult`
+                  + `&_=${Date.now()}`;
+            document.body.appendChild(s);
+        });
+
+        window.handleCreateResult = function (res) {
+            stopLoading(() => {
+                const btn = document.getElementById('submitBtn');
+                btn.disabled = false;
+                btn.textContent = 'Create File Index Entry';
+
+                if (!res || res.status !== 'success') {
+                    showToast((res && res.message) || 'Error creating entry.', 'error');
+                    return;
+                }
+
+                showToast('Entry created: ' + res.eFileNumber, 'success');
+                document.getElementById('fileIndexForm').reset();
+                document.getElementById('dateOfCreation').value = todayISO();
+                setTimeout(window.loadFileIndexData, 400);
+            });
+        };
+
+        /* ---------- Filters ---------- */
+        document.getElementById('searchInput').addEventListener('input', () => {
+            currentPage = 1;
+            renderTable();
+        });
+        document.getElementById('dateFilter').addEventListener('change', () => {
+            currentPage = 1;
+            renderTable();
+        });
+        document.getElementById('clearFiltersBtn').addEventListener('click', () => {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('dateFilter').value = '';
+            currentPage = 1;
+            renderTable();
+        });
+
+        /* ---------- Pagination ---------- */
+        document.getElementById('prevPageBtn').addEventListener('click', () => {
+            if (currentPage > 1) { currentPage--; renderTable(); }
+        });
+        document.getElementById('nextPageBtn').addEventListener('click', () => {
+            const total = Math.ceil(getFilteredData().length / rowsPerPage);
+            if (currentPage < total) { currentPage++; renderTable(); }
+        });
+
+        /* ---------- Refresh ---------- */
+        document.getElementById('refreshBtn').addEventListener('click', window.loadFileIndexData);
+
+        /* ---------- Init ---------- */
+        window.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('dateOfCreation').value = todayISO();
+            window.loadFileIndexData();
+        });
+    </script>
+</body>
+</html>
