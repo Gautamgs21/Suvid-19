@@ -201,6 +201,28 @@
         .sura-input::placeholder { color: var(--ink-soft); opacity: 0.6; }
         .sura-input[readonly] { background: var(--line-soft); cursor: not-allowed; }
 
+        /* Fixed (uneditable) prefix + editable remainder */
+        .prefix-group { display: flex; align-items: stretch; width: 100%; }
+        .prefix-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0 12px;
+            background: var(--line-soft);
+            color: var(--ink);
+            border: 1px solid var(--line);
+            border-right: none;
+            border-radius: 3px 0 0 3px;
+            font-size: 14px;
+            font-weight: 600;
+            user-select: none;
+            cursor: not-allowed;
+        }
+        .prefix-group .sura-input {
+            border-radius: 0 3px 3px 0;
+            flex: 1;
+            min-width: 0;
+        }
+
         .sura-btn-primary {
             width: 100%;
             background: var(--ink);
@@ -380,7 +402,8 @@
                     <span class="hidden sm:inline">Back to Dashboard</span>
                     <span class="sm:hidden">Back</span>
                 </a>
-                <h1 class="text-xl sm:text-2xl lg:text-3xl tracking-wide truncate" style="font-weight:600;">File Index Register</h1>
+                <!-- ml-auto + text-right pushes the title to the right edge -->
+                <h1 class="text-xl sm:text-2xl lg:text-3xl tracking-wide truncate ml-auto text-right" style="font-weight:600;">File Index Register</h1>
             </div>
         </div>
     </header>
@@ -404,11 +427,16 @@
                     </div>
                     <div>
                         <label class="sura-label">Physical File Number</label>
-                        <input type="text" id="fileNumber" placeholder="e.g., 2026/SUC/042" required class="sura-input">
+                        <!-- Prefilled but editable -->
+                        <input type="text" id="fileNumber" value="CCA/KRL/" required class="sura-input">
                     </div>
                     <div>
-                        <label class="sura-label">E-File Number (Auto-generated)</label>
-                        <input type="text" id="eFileNumberPreview" class="sura-input" readonly value="EF-0001">
+                        <label class="sura-label">E-File Number</label>
+                        <!-- "E-" is fixed and cannot be edited; the rest is typed by the user -->
+                        <div class="prefix-group">
+                            <span class="prefix-badge" title="This prefix cannot be changed">E-</span>
+                            <input type="text" id="eFileSuffix" placeholder="e.g., 12345" required class="sura-input">
+                        </div>
                     </div>
                     <div>
                         <label class="sura-label">File Name</label>
@@ -486,13 +514,25 @@
     </footer>
 
     <script>
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbze3G7WnlzAy1P9UTRa7G4tthfoSQbzc7Le6w-C2sQ5HQUTWMpSz0h3GLZhm1I-o0_N/exec";;
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbze3G7WnlzAy1P9UTRa7G4tthfoSQbzc7Le6w-C2sQ5HQUTWMpSz0h3GLZhm1I-o0_N/exec";
+
+        const FILE_NUMBER_PREFIX = "CCA/KRL/";
+        const EFILE_PREFIX = "E-";
 
         let allData = [];
         let currentPage = 1;
         const rowsPerPage = 20;
 
         /* ---------- Helpers ---------- */
+        function esc(str) {
+            return String(str == null ? '' : str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
         function formatDateForDisplay(dateStr) {
             if (!dateStr) return '';
             const clean = dateStr.includes('T') ? dateStr.split('T')[0] : dateStr;
@@ -512,13 +552,18 @@
             const container = document.getElementById('toastContainer');
             const toast = document.createElement('div');
             toast.className = `sura-toast ${type}`;
-            toast.innerHTML = `<span>${message}</span>`;
+            toast.innerHTML = `<span>${esc(message)}</span>`;
             container.appendChild(toast);
             setTimeout(() => toast.classList.add('show'), 10);
             setTimeout(() => {
                 toast.classList.remove('show');
                 setTimeout(() => toast.remove(), 300);
             }, 3500);
+        }
+
+        function resetFormFields() {
+            document.getElementById('fileIndexForm').reset();   // restores "CCA/KRL/" and clears E-File suffix
+            document.getElementById('dateOfCreation').value = todayISO();
         }
 
         /* ---------- Loading overlay ---------- */
@@ -556,23 +601,7 @@
             }, 200);
         }
 
-        /* ---------- E-file number preview ---------- */
-        function computeNextEFileNumber(data) {
-            let max = 0;
-            data.forEach(row => {
-                const m = (row.eFileNumber || '').match(/EF-(\d+)/i);
-                if (m) {
-                    const n = parseInt(m[1], 10);
-                    if (n > max) max = n;
-                }
-            });
-            return 'EF-' + String(max + 1).padStart(4, '0');
-        }
-        function updateEFilePreview() {
-            document.getElementById('eFileNumberPreview').value = computeNextEFileNumber(allData);
-        }
-
-        /* ---------- Filtering + sorting ---------- */
+        /* ---------- Filtering ---------- */
         function getFilteredData() {
             const term = document.getElementById('searchInput').value.trim().toLowerCase();
             const dateFilter = document.getElementById('dateFilter').value;
@@ -614,10 +643,10 @@
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td class="sl-no">${sl}</td>
-                    <td style="font-weight:600; color:var(--brass); white-space:nowrap;">${row.eFileNumber || ''}</td>
-                    <td style="white-space:nowrap;">${row.fileNumber || ''}</td>
-                    <td style="color:var(--ink); word-break:break-word;">${row.fileName || ''}</td>
-                    <td style="color:var(--ink-soft); white-space:nowrap;">${formatDateForDisplay(row.dateOfCreation)}</td>
+                    <td style="font-weight:600; color:var(--brass); white-space:nowrap;">${esc(row.eFileNumber)}</td>
+                    <td style="white-space:nowrap;">${esc(row.fileNumber)}</td>
+                    <td style="color:var(--ink); word-break:break-word;">${esc(row.fileName)}</td>
+                    <td style="color:var(--ink-soft); white-space:nowrap;">${esc(formatDateForDisplay(row.dateOfCreation))}</td>
                 `;
                 tbody.appendChild(tr);
             });
@@ -635,21 +664,36 @@
             if (old) old.remove();
             const s = document.createElement('script');
             s.id = 'jsonpFileIndex';
+            s.onerror = () => stopLoading(() => {
+                showToast('Could not reach the server. Check the script web address and access settings.', 'error');
+            });
             s.src = `${SCRIPT_URL}?action=getFileIndex&callback=handleFileIndexData&_=${Date.now()}`;
             document.body.appendChild(s);
         };
 
         window.handleFileIndexData = function (data) {
             stopLoading(() => {
+                if (!Array.isArray(data)) {
+                    showToast('Unexpected reply from server.', 'error');
+                    return;
+                }
+                if (data[0] && data[0].error) {
+                    showToast('Server error: ' + data[0].error, 'error');
+                    return;
+                }
+                // Old script version returns Work Folder rows (they have folderId, not eFileNumber)
+                if (data[0] && data[0].folderId !== undefined && data[0].eFileNumber === undefined) {
+                    showToast('Server is running an old script version. Redeploy the web app.', 'error');
+                    return;
+                }
                 // Sort: latest Date of Creation first, then E-File number descending
                 data.sort((a, b) => {
                     const dA = (a.dateOfCreation || '').replace(/-/g, '');
                     const dB = (b.dateOfCreation || '').replace(/-/g, '');
                     if (dA !== dB) return dB.localeCompare(dA);
-                    return (b.eFileNumber || '').localeCompare(a.eFileNumber || '');
+                    return (b.eFileNumber || '').localeCompare(a.eFileNumber || '', undefined, { numeric: true });
                 });
                 allData = data;
-                updateEFilePreview();
                 renderTable();
             });
         };
@@ -659,11 +703,29 @@
             e.preventDefault();
             const btn = document.getElementById('submitBtn');
             const fileNumber = document.getElementById('fileNumber').value.trim();
+            const eSuffix = document.getElementById('eFileSuffix').value.trim();
             const fileName = document.getElementById('fileName').value.trim();
             const dateOfCreation = document.getElementById('dateOfCreation').value || todayISO();
 
-            if (!fileNumber || !fileName) {
-                showToast('Please fill all required fields.', 'error');
+            if (fileNumber.length <= FILE_NUMBER_PREFIX.length || !fileNumber.toUpperCase().startsWith(FILE_NUMBER_PREFIX)) {
+                showToast('Please complete the Physical File Number after "' + FILE_NUMBER_PREFIX + '".', 'error');
+                return;
+            }
+            if (!eSuffix) {
+                showToast('Please enter the E-File Number after "' + EFILE_PREFIX + '".', 'error');
+                return;
+            }
+            if (!fileName) {
+                showToast('Please enter the File Name.', 'error');
+                return;
+            }
+
+            const eFileNumber = EFILE_PREFIX + eSuffix;
+
+            // Quick duplicate check against what is already loaded (server checks again)
+            const dup = allData.some(r => (r.eFileNumber || '').toLowerCase() === eFileNumber.toLowerCase());
+            if (dup) {
+                showToast('E-File Number ' + eFileNumber + ' already exists.', 'error');
                 return;
             }
 
@@ -675,7 +737,13 @@
             if (old) old.remove();
             const s = document.createElement('script');
             s.id = 'jsonpCreate';
+            s.onerror = () => stopLoading(() => {
+                btn.disabled = false;
+                btn.textContent = 'Create File Index Entry';
+                showToast('Could not reach the server. Check the script web address and access settings.', 'error');
+            });
             s.src = `${SCRIPT_URL}?action=createFileIndex`
+                  + `&eFileNumber=${encodeURIComponent(eFileNumber)}`
                   + `&fileNumber=${encodeURIComponent(fileNumber)}`
                   + `&fileName=${encodeURIComponent(fileName)}`
                   + `&dateOfCreation=${encodeURIComponent(dateOfCreation)}`
@@ -691,13 +759,15 @@
                 btn.textContent = 'Create File Index Entry';
 
                 if (!res || res.status !== 'success') {
-                    showToast((res && res.message) || 'Error creating entry.', 'error');
+                    const msg = Array.isArray(res)
+                        ? 'Server is running an old script version. Redeploy the web app.'
+                        : ((res && res.message) || 'Error creating entry.');
+                    showToast(msg, 'error');
                     return;
                 }
 
                 showToast('Entry created: ' + res.eFileNumber, 'success');
-                document.getElementById('fileIndexForm').reset();
-                document.getElementById('dateOfCreation').value = todayISO();
+                resetFormFields();
                 setTimeout(window.loadFileIndexData, 400);
             });
         };
