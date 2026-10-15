@@ -426,6 +426,11 @@
                         <input type="date" id="dateOfCreation" required class="sura-input">
                     </div>
                     <div>
+                        <label class="sura-label">Financial Year</label>
+                        <!-- Prefilled automatically (April to March), but editable. Format: 2026-27 -->
+                        <input type="text" id="financialYear" placeholder="e.g., 2026-27" maxlength="7" required class="sura-input">
+                    </div>
+                    <div>
                         <label class="sura-label">Physical File Number</label>
                         <!-- Prefilled but editable -->
                         <input type="text" id="fileNumber" value="CCA/KRL/" required class="sura-input">
@@ -461,7 +466,7 @@
 
                     <div class="filter-bar">
                         <div class="sura-search-wrap flex-1 min-w-[180px]">
-                            <input type="text" id="searchInput" placeholder="Search E-File, File No, or Name..."
+                            <input type="text" id="searchInput" placeholder="Search E-File, File No, Name, or FY..."
                                    class="sura-input" style="padding-top:6px; padding-bottom:6px;">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
@@ -490,6 +495,7 @@
                                 <th class="w-40">File Number</th>
                                 <th>File Name</th>
                                 <th class="w-32">Date of Creation</th>
+                                <th class="w-32">Financial Year</th>
                             </tr>
                         </thead>
                         <tbody id="fileIndexTableBody" class="divide-y" style="border-color: var(--line-soft);">
@@ -561,9 +567,25 @@
             }, 3500);
         }
 
+        /* Financial year runs 1 April to 31 March.
+           On or before 31-03-2026 -> 2025-26; from 01-04-2026 -> 2026-27 */
+        function currentFinancialYear() {
+            const d = new Date();
+            const startYear = d.getMonth() >= 3 ? d.getFullYear() : d.getFullYear() - 1;   // month 3 = April
+            return startYear + '-' + String((startYear + 1) % 100).padStart(2, '0');
+        }
+
+        /* Must look like 2026-27, and the second part must be the next year */
+        function isValidFinancialYear(fy) {
+            const m = /^(\d{4})-(\d{2})$/.exec(fy);
+            if (!m) return false;
+            return parseInt(m[2], 10) === (parseInt(m[1], 10) + 1) % 100;
+        }
+
         function resetFormFields() {
             document.getElementById('fileIndexForm').reset();   // restores "CCA/KRL/" and clears E-File suffix
             document.getElementById('dateOfCreation').value = todayISO();
+            document.getElementById('financialYear').value = currentFinancialYear();
         }
 
         /* ---------- Loading overlay ---------- */
@@ -610,7 +632,8 @@
                 const matchesTerm = !term ||
                     (row.eFileNumber || '').toLowerCase().includes(term) ||
                     (row.fileNumber  || '').toLowerCase().includes(term) ||
-                    (row.fileName    || '').toLowerCase().includes(term);
+                    (row.fileName    || '').toLowerCase().includes(term) ||
+                    (row.financialYear || '').toLowerCase().includes(term);
                 const matchesDate = !dateFilter || (row.dateOfCreation === dateFilter);
                 return matchesTerm && matchesDate;
             });
@@ -623,7 +646,7 @@
             tbody.innerHTML = '';
 
             if (data.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center" style="color: var(--ink-soft);">No entries found.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center" style="color: var(--ink-soft);">No entries found.</td></tr>`;
                 document.getElementById('paginationInfo').textContent = 'Showing 0-0 of 0 entries';
                 document.getElementById('prevPageBtn').disabled = true;
                 document.getElementById('nextPageBtn').disabled = true;
@@ -647,6 +670,7 @@
                     <td style="white-space:nowrap;">${esc(row.fileNumber)}</td>
                     <td style="color:var(--ink); word-break:break-word;">${esc(row.fileName)}</td>
                     <td style="color:var(--ink-soft); white-space:nowrap;">${esc(formatDateForDisplay(row.dateOfCreation))}</td>
+                    <td style="white-space:nowrap;">${esc(row.financialYear)}</td>
                 `;
                 tbody.appendChild(tr);
             });
@@ -720,6 +744,12 @@
                 return;
             }
 
+            const financialYear = document.getElementById('financialYear').value.trim();
+            if (!isValidFinancialYear(financialYear)) {
+                showToast('Financial Year must look like 2026-27 (second part = next year).', 'error');
+                return;
+            }
+
             const eFileNumber = EFILE_PREFIX + eSuffix;
 
             // Quick duplicate check against what is already loaded (server checks again)
@@ -747,6 +777,7 @@
                   + `&fileNumber=${encodeURIComponent(fileNumber)}`
                   + `&fileName=${encodeURIComponent(fileName)}`
                   + `&dateOfCreation=${encodeURIComponent(dateOfCreation)}`
+                  + `&financialYear=${encodeURIComponent(financialYear)}`
                   + `&callback=handleCreateResult`
                   + `&_=${Date.now()}`;
             document.body.appendChild(s);
@@ -766,7 +797,11 @@
                     return;
                 }
 
-                showToast('Entry created: ' + res.eFileNumber, 'success');
+                if (res.financialYear === undefined) {
+                    showToast('Saved, but the script is outdated and did not store Financial Year. Redeploy the web app.', 'error');
+                } else {
+                    showToast('Entry created: ' + res.eFileNumber, 'success');
+                }
                 resetFormFields();
                 setTimeout(window.loadFileIndexData, 400);
             });
@@ -803,6 +838,7 @@
         /* ---------- Init ---------- */
         window.addEventListener('DOMContentLoaded', () => {
             document.getElementById('dateOfCreation').value = todayISO();
+            document.getElementById('financialYear').value = currentFinancialYear();
             window.loadFileIndexData();
         });
     </script>
