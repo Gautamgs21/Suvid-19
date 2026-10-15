@@ -678,6 +678,15 @@
             return cleanStr;
         }
 
+        // Returns today's date as YYYY-MM-DD (used as the default Date of Entry)
+        function todayISO() {
+            const d = new Date();
+            const yyyy = d.getFullYear();
+            const mm = String(d.getMonth() + 1).padStart(2, '0');
+            const dd = String(d.getDate()).padStart(2, '0');
+            return `${yyyy}-${mm}-${dd}`;
+        }
+
         // Toast Notification System (themed)
         function showToast(message, type = 'success') {
             const container = document.getElementById('toastContainer');
@@ -1029,6 +1038,7 @@
                 stopLoading(() => {
                     showToast('Entry Created Successfully!', 'success');
                     document.getElementById('workForm').reset();
+                    document.getElementById('entryDate').value = todayISO();
                     submitBtn.disabled = false;
                     submitBtn.textContent = 'Create New Entry';
                     setTimeout(window.loadTableData, 500);
@@ -1043,6 +1053,9 @@
                 });
             });
         });
+
+        // Default Date of Entry = today
+        document.getElementById('entryDate').value = todayISO();
 
         // Load data automatically when page opens
         window.onload = window.loadTableData;
